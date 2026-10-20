@@ -1,0 +1,356 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #393939;
+  background: #f1f4f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --vermelho: #CE171F;
+  --vermelho-escuro: #a71118;
+  --dourado: #f4c400;
+  --cinza-texto: #454545;
+  --cinza-suave: #75849a;
+  --borda: #e0e5ec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.totem {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cabeçalho inspirado na identidade visual do mercado */
+.cabecalho {
+  min-height: 112px;
+  padding: 22px 5%;
+  background: var(--vermelho);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 10%);
+}
+
+.titulo-cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.subtitulo-cabecalho {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+
+.titulo-cabecalho h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(31px, 4vw, 49px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.marca {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -2px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-compre-mix {
+  display: block;
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Área principal */
+.conteudo {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 24px 20px;
+}
+
+.painel {
+  width: min(100%, 680px);
+  background: white;
+  border: 1px solid var(--borda);
+  border-radius: 22px;
+  padding: 42px 54px;
+  text-align: center;
+  box-shadow: 0 5px 18px rgb(28 42 66 / 7%);
+}
+
+.icone-acougue {
+  width: 66px;
+  height: 66px;
+  margin: 0 auto 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff0f0;
+  color: var(--vermelho);
+  font-size: 43px;
+}
+
+.identificacao {
+  margin: 0 0 12px;
+  color: var(--vermelho);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.painel h2 {
+  margin: 0;
+  color: #343434;
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 1.2;
+}
+
+.descricao {
+  margin: 14px 0 32px;
+  color: var(--cinza-suave);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.painel form {
+  text-align: left;
+}
+
+.painel label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.painel input {
+  width: 100%;
+  min-height: 76px;
+  padding: 16px 20px;
+  border: 2px solid #cfd6e0;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+  color: #292929;
+  font-size: 28px;
+  letter-spacing: 2px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.painel input:focus {
+  border-color: var(--vermelho);
+  box-shadow: 0 0 0 4px rgb(215 25 32 / 12%);
+}
+
+.painel input:disabled {
+  background: #f5f5f5;
+}
+
+.ajuda {
+  margin: 9px 0 24px;
+  color: var(--cinza-suave);
+  font-size: 14px;
+}
+
+.botao-continuar {
+  width: 100%;
+  min-height: 76px;
+  padding: 18px 24px;
+  border: none;
+  border-radius: 12px;
+  background: var(--vermelho);
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--vermelho-escuro);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.botao-continuar:hover:not(:disabled) {
+  background: var(--vermelho-escuro);
+}
+
+.botao-continuar:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #850d13;
+}
+
+.botao-continuar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Mensagens de retorno da API */
+.mensagem {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.mensagem-erro {
+  background: #fff0f0;
+  border: 1px solid #f1b9bc;
+  color: #a71118;
+}
+
+.mensagem-sucesso {
+  background: #fff8d9;
+  border: 1px solid #ead47d;
+  color: #65500a;
+}
+
+.cliente {
+  margin-top: 24px;
+  padding: 22px;
+  border-radius: 12px;
+  background: #fff8d9;
+  border: 1px solid #ead47d;
+}
+
+.cliente-etiqueta {
+  margin: 0 0 8px;
+  color: #806300;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.cliente h3 {
+  margin: 0 0 8px;
+  font-size: 25px;
+}
+
+.cliente p:last-child {
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* Rodapé */
+.rodape {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 34px;
+  color: var(--cinza-suave);
+  font-size: 15px;
+}
+
+.rodape span:first-child {
+  color: #7a7e83;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.rodape span+span::before {
+  content: "|";
+  margin-right: 10px;
+  color: #c3cad4;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 600px) {
+  .cabecalho {
+    min-height: 88px;
+    padding: 18px;
+    gap: 12px;
+  }
+
+  .subtitulo-cabecalho {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+
+  .titulo-cabecalho h1 {
+    font-size: 23px;
+  }
+
+  .marca {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-compre-mix {
+    display: block;
+    width: 190px;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .conteudo {
+    padding: 24px 14px 18px;
+  }
+
+  .painel {
+    padding: 30px 22px;
+    border-radius: 16px;
+  }
+
+  .descricao {
+    font-size: 17px;
+    margin-bottom: 26px;
+  }
+
+  .painel input {
+    min-height: 66px;
+    font-size: 22px;
+  }
+
+  .botao-continuar {
+    min-height: 66px;
+    font-size: 21px;
+  }
+
+  .rodape {
+    font-size: 12px;
+  }
+}
+
+.titulo-cabecalho h1 span {
+  display: block;
+}
