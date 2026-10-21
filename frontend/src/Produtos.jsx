@@ -19,8 +19,8 @@ function identificarCategoria(nome) {
 
     if (texto.includes("LINGUI")) return "Linguiças";
     if (texto.includes("FRANGO") ||
-        texto.includes("AVE") || 
-        texto.includes("GALETO") || 
+        texto.includes("AVE") ||
+        texto.includes("GALETO") ||
         texto.includes("CHESTER")
     ) return "Aves";
     if (
@@ -63,6 +63,40 @@ function identificarCategoria(nome) {
     return "Ofertas";
 }
 
+
+// Relaciona os campos do Oracle aos nomes exibidos no dropdown.
+const tiposDeCorte = [
+    { campo: "BIFE", nome: "Bife" },
+    { campo: "MANTA", nome: "Manta" },
+    { campo: "PEDACO", nome: "Pedaço" },
+    { campo: "MOIDO", nome: "Moído" },
+    { campo: "STROGONOFF", nome: "Strogonoff" },
+    { campo: "RIPA_PICADA", nome: "Ripa picada" },
+    { campo: "MINGA_MANTA", nome: "Minga manta" },
+    { campo: "MINGA_PEDACO", nome: "Minga pedaço" },
+    { campo: "PICADO", nome: "Picado" },
+    { campo: "FATIADO", nome: "Fatiado" },
+    { campo: "PECA", nome: "Peça" },
+    { campo: "INTEIRO", nome: "Inteiro" },
+    { campo: "A_PASSARINHO", nome: "À passarinho" },
+];
+
+// Retorna somente os cortes marcados com "S" no Oracle.
+function identificarCortes(produto) {
+    return tiposDeCorte
+        .filter(
+            (corte) =>
+                String(produto[corte.campo] || "")
+                    .trim()
+                    .toUpperCase() === "S"
+        )
+        .map((corte) => ({
+            valor: corte.campo,
+            nome: corte.nome,
+        }));
+}
+
+
 function Produtos({ cliente }) {
     const [produtos, setProdutos] = useState([]);
     const [carregando, setCarregando] = useState(true);
@@ -78,6 +112,7 @@ function Produtos({ cliente }) {
         aberta: false,
         senha: "",
     });
+    const [dropdownCorteAberto, setDropdownCorteAberto] = useState(null);
 
     useEffect(() => {
         async function carregarProdutos() {
@@ -112,7 +147,8 @@ function Produtos({ cliente }) {
                         categoria: identificarCategoria(nome),
                         preco: Number(produto.PVENDA),
                         unidade,
-
+                        // Cortes disponíveis conforme cadastro no Oracle.
+                        cortesDisponiveis: identificarCortes(produto),
                         // Busca a foto real do produto cadastrada no WinThor.
                         imagem: produto.DIRFOTOPROD
                             ? `/api/produtos/imagem/${produto.CODPROD}`
@@ -122,6 +158,13 @@ function Produtos({ cliente }) {
                     };
 
                 });
+
+                console.log(
+                    "Produtos com cortes:",
+                    produtosFormatados.filter(
+                        (produto) => produto.cortesDisponiveis.length > 0
+                    )
+                );
 
                 setProdutos(produtosFormatados);
             } catch (erro) {
@@ -181,15 +224,44 @@ function Produtos({ cliente }) {
                 );
             }
 
+
             return [
                 ...atual,
                 {
                     ...produto,
                     quantidade: produto.unidade === "kg" ? 100 : 1,
+
+                    // Guarda o corte escolhido para este produto.
+                    // Começa vazio quando o produto exige seleção.
+                    corteSelecionado: "",
                 },
             ];
+
         });
     }
+
+
+    // Atualiza o corte escolhido para um produto do carrinho.
+    function alterarCorte(idProduto, novoCorte) {
+        setCarrinho((atual) =>
+            atual.map((item) => {
+                if (item.id !== idProduto) {
+                    return item;
+                }
+
+                // Aceita somente cortes disponíveis para o produto.
+                const corteValido = item.cortesDisponiveis.some(
+                    (corte) => corte.valor === novoCorte
+                );
+
+                return {
+                    ...item,
+                    corteSelecionado: corteValido ? novoCorte : "",
+                };
+            })
+        );
+    }
+
 
     function alterarQuantidade(id, variacao) {
         setCarrinho((atual) =>
@@ -258,6 +330,22 @@ function Produtos({ cliente }) {
     const ultimoItemAdicionado = carrinho.find(
         (item) => item.id === ultimoProdutoClicado
     );
+
+    // Identifica os produtos que exigem corte,
+    // mas ainda não possuem uma opção selecionada.
+    const produtosSemCorte = carrinho.filter((item) => {
+        const exigeCorte = item.cortesDisponiveis?.length > 0;
+
+        const corteValido = item.cortesDisponiveis?.some(
+            (corte) => corte.valor === item.corteSelecionado
+        );
+
+        return exigeCorte && !corteValido;
+    });
+
+    // Todos os cortes obrigatórios foram selecionados?
+    const cortesPreenchidos = produtosSemCorte.length === 0;
+
 
     const total = carrinho.reduce((soma, item) => {
         const quantidade = item.unidade === "kg"
@@ -441,6 +529,7 @@ function Produtos({ cliente }) {
 
                                     )}
 
+
                                     <div className="nome-item">
                                         <strong>{item.nome}</strong>
 
@@ -449,6 +538,72 @@ function Produtos({ cliente }) {
                                                 ? `Peso: ${formatarPeso(item.quantidade)}`
                                                 : `Quantidade: ${item.quantidade} un.`}
                                         </small>
+
+                                        {/* Mostra o dropdown somente quando há cortes disponíveis. */}
+                                        {item.cortesDisponiveis.length > 0 && (
+                                            <div className="area-selecao-corte">
+
+                                                <div className="dropdown-corte-container">
+
+                                                    <button
+                                                        type="button"
+                                                        className={`dropdown-corte-botao ${dropdownCorteAberto === item.id ? "aberto" : ""
+                                                            }`}
+                                                        aria-expanded={dropdownCorteAberto === item.id}
+                                                        aria-controls={`opcoes-corte-${item.id}`}
+                                                        onClick={() =>
+                                                            setDropdownCorteAberto((atual) =>
+                                                                atual === item.id ? null : item.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <span>
+                                                            {item.cortesDisponiveis.find(
+                                                                (corte) => corte.valor === item.corteSelecionado
+                                                            )?.nome || "Selecione o tipo de corte"}
+                                                        </span>
+
+                                                        <span className="dropdown-corte-seta">
+                                                            {dropdownCorteAberto === item.id ? "⌃" : "⌄"}
+                                                        </span>
+                                                    </button>
+
+                                                    {dropdownCorteAberto === item.id && (
+                                                        <div
+                                                            id={`opcoes-corte-${item.id}`}
+                                                            className="dropdown-corte-opcoes"
+                                                        >
+                                                            {item.cortesDisponiveis.map((corte) => (
+                                                                <button
+                                                                    key={corte.valor}
+                                                                    type="button"
+                                                                    className={`dropdown-corte-opcao ${item.corteSelecionado === corte.valor
+                                                                        ? "selecionada"
+                                                                        : ""
+                                                                        }`}
+                                                                    onClick={() => {
+                                                                        alterarCorte(item.id, corte.valor);
+                                                                        setDropdownCorteAberto(null);
+                                                                    }}
+                                                                >
+                                                                    <span>{corte.nome}</span>
+
+                                                                    {item.corteSelecionado === corte.valor && (
+                                                                        <span aria-hidden="true">✓</span>
+                                                                    )}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {!item.corteSelecionado && (
+                                                    <small className="aviso-corte-obrigatorio">
+                                                        Selecione um corte para conseguir continuar.
+                                                    </small>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <strong className="subtotal-item">
@@ -554,6 +709,32 @@ function Produtos({ cliente }) {
                                         )}
                                     </strong>
 
+                                    {/* Dropdown compacto para selecionar o corte */}
+                                    {item.cortesDisponiveis?.length > 0 && (
+                                        <div className="modal-area-corte">
+                                            <select
+                                                id={`modal-corte-${item.id}`}
+                                                className="modal-dropdown-corte"
+                                                aria-label={`Tipo de corte para ${item.nome}`}
+                                                value={item.corteSelecionado || ""}
+                                                onChange={(event) =>
+                                                    alterarCorte(item.id, event.target.value)
+                                                }
+                                            >
+                                                <option value="">Selecione o corte</option>
+
+                                                {item.cortesDisponiveis.map((corte) => (
+                                                    <option
+                                                        key={corte.valor}
+                                                        value={corte.valor}
+                                                    >
+                                                        {corte.nome}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <button
                                         type="button"
                                         className="botao-excluir-modal"
@@ -609,10 +790,25 @@ function Produtos({ cliente }) {
                                 Voltar
                             </button>
 
+
+                            {produtosSemCorte.length > 0 && (
+                                <p className="aviso-cortes-pendentes" role="alert">
+                                    Selecione o tipo de corte dos seguintes produtos
+                                    antes de confirmar o pedido:
+
+                                    <strong>
+                                        {produtosSemCorte
+                                            .map((item) => item.nome)
+                                            .join(", ")}
+                                    </strong>
+                                </p>
+                            )}
+
+
                             <button
                                 className="botao-confirmar"
                                 onClick={confirmarPedido}
-                                disabled={enviandoPedido || carrinho.length === 0}
+                                disabled={enviandoPedido || carrinho.length === 0 || !cortesPreenchidos}
                             >
                                 {enviandoPedido
                                     ? "Enviando..."

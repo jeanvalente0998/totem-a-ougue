@@ -4,13 +4,13 @@ const oracledb = require("oracledb");
 
 // Consulta os produtos disponíveis para o totem.
 async function consultarProdutos() {
-  let conexao;
+    let conexao;
 
-  try {
-    // Abre a conexão com o Oracle.
-    conexao = await obterConexao();
+    try {
+        // Abre a conexão com o Oracle.
+        conexao = await obterConexao();
 
-    const sql = `
+        const sql = `
       SELECT
         A.CODPROD,
         A.DESCRICAO,
@@ -23,13 +23,35 @@ async function consultarProdutos() {
           - F.QTINDENIZ
           - F.QTRESERV
         ) AS EST_LIQUIDO,
-        E.PVENDA
+        
+        E.PVENDA,
+
+        -- Tipos de corte disponíveis para o produto.
+        C.BIFE,
+        C.MANTA,
+        C.PEDACO,
+        C.MOIDO,
+        C.STROGONOFF,
+        C.RIPA_PICADA,
+        C.MINGA_MANTA,
+        C.MINGA_PEDACO,
+        C.PICADO,
+        C.FATIADO,
+        C.PECA,
+        C.INTEIRO,
+        C.A_PASSARINHO
+
       FROM HOMOLOGA.PCPRODUT A
 
       JOIN HOMOLOGA.PCSUBCATEGORIA S
         ON S.CODSUBCATEGORIA = A.CODSUBCATEGORIA
        AND S.CODSEC = A.CODSEC
        AND S.CODCATEGORIA = A.CODCATEGORIA
+
+       
+      -- Relaciona os cortes disponíveis ao produto.
+      LEFT JOIN HOMOLOGA.CF_PRODUTOS_CORTES C
+        ON C.CODPROD = A.CODPROD
 
       JOIN HOMOLOGA.PCEST F
         ON F.CODPROD = A.CODPROD
@@ -52,7 +74,7 @@ async function consultarProdutos() {
 
         -- Somente embalagens válidas vendidas por quilo.
         AND E.UNIDADE = 'KG'
-        AND E.EXCLUIDO = 'N'
+        AND (E.EXCLUIDO  IS NULL OR E.EXCLUIDO = 'N')
         AND E.PVENDA > 0
 
         -- Seleciona o código auxiliar com 6 dígitos.
@@ -64,20 +86,20 @@ async function consultarProdutos() {
       ORDER BY A.DESCRICAO
     `;
 
-    // Executa a consulta e retorna cada linha como um objeto.
-    const resultado = await conexao.execute(
-      sql,
-      [],
-      { outFormat: oracledb.OUT_FORMAT_OBJECT }
-    );
+        // Executa a consulta e retorna cada linha como um objeto.
+        const resultado = await conexao.execute(
+            sql,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
 
-    return resultado.rows;
-  } finally {
-    // Fecha a conexão mesmo se ocorrer algum erro.
-    if (conexao) {
-      await conexao.close();
+        return resultado.rows;
+    } finally {
+        // Fecha a conexão mesmo se ocorrer algum erro.
+        if (conexao) {
+            await conexao.close();
+        }
     }
-  }
 }
 
 module.exports = { consultarProdutos };

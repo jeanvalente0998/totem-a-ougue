@@ -8,6 +8,23 @@ const {
     consultarClientePorCpf,
 } = require("./database/oracle");
 
+// Colunas que representam os tipos de corte no Oracle.
+const CAMPOS_CORTES = [
+    "BIFE",
+    "MANTA",
+    "PEDACO",
+    "MOIDO",
+    "STROGONOFF",
+    "RIPA_PICADA",
+    "MINGA_MANTA",
+    "MINGA_PEDACO",
+    "PICADO",
+    "FATIADO",
+    "PECA",
+    "INTEIRO",
+    "A_PASSARINHO",
+];
+
 // Recebe e grava um pedido do totem no Oracle.
 router.post("/", async (req, res) => {
     let conexao;
@@ -77,13 +94,30 @@ router.post("/", async (req, res) => {
                 A.CODPROD,
                 A.DESCRICAO,
                 E.UNIDADE,
-                E.PVENDA,
-                (
-                    F.QTESTGER
-                    - F.QTBLOQUEADA
-                    - F.QTINDENIZ
-                    - F.QTRESERV
-                ) AS EST_LIQUIDO
+                
+E.PVENDA,
+(
+    F.QTESTGER
+    - F.QTBLOQUEADA
+    - F.QTINDENIZ
+    - F.QTRESERV
+) AS EST_LIQUIDO,
+
+-- Cortes permitidos para o produto.
+C.BIFE,
+C.MANTA,
+C.PEDACO,
+C.MOIDO,
+C.STROGONOFF,
+C.RIPA_PICADA,
+C.MINGA_MANTA,
+C.MINGA_PEDACO,
+C.PICADO,
+C.FATIADO,
+C.PECA,
+C.INTEIRO,
+C.A_PASSARINHO
+
             FROM HOMOLOGA.PCPRODUT A
             JOIN HOMOLOGA.PCSUBCATEGORIA S
                 ON S.CODSUBCATEGORIA = A.CODSUBCATEGORIA
@@ -105,7 +139,7 @@ router.post("/", async (req, res) => {
                     - F.QTRESERV
                   ) > 0
               AND E.UNIDADE = 'KG'
-              AND E.EXCLUIDO = 'N'
+              AND (E.EXCLUIDO  IS NULL OR E.EXCLUIDO = 'N')
               AND E.PVENDA > 0
               AND LENGTH(TRIM(TO_CHAR(E.CODAUXILIAR))) = 6
               AND UPPER(TRIM(S.SUBCATEGORIA)) <> 'PERDA'

@@ -219,10 +219,13 @@
     font-size: 12px;
 }
 
+
 .lista-carrinho {
-    max-height: 118px;
-    overflow-y: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
 }
+
 
 .lista-carrinho>p {
     color: #666;
@@ -375,7 +378,7 @@
     }
 
     .lista-carrinho {
-        max-height: 220px;
+        max-height: none;
     }
 
     .botao-etiqueta {
@@ -484,7 +487,7 @@
     text-align: center;
 }
 
-.modal-confirmacao > p {
+.modal-confirmacao>p {
     margin: 0 0 22px;
     color: #555555;
     font-size: 16px;
@@ -1101,27 +1104,417 @@
 
 @media (max-width: 768px) {
 
-  .carrinho-inferior {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    .carrinho-inferior {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+
+        width: 100%;
+        box-sizing: border-box;
+
+        background: #FFFFFF;
+        border-top: 4px solid #FFC20E;
+
+        z-index: 1000;
+    }
+
+    /* Reserva espaço para o rodapé não cobrir
+     os últimos produtos da lista */
+
+    .tela-acougue {
+        padding-bottom: 220px;
+    }
+
+}
+
+
+/* =========================================
+   SELEÇÃO DO TIPO DE CORTE NO RODAPÉ
+   ========================================= */
+
+.area-selecao-corte {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 280px;
+}
+
+.area-selecao-corte label {
+    color: #292929;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dropdown-corte {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+
+    background: #FFFFFF;
+    color: #292929;
+
+    border: 1px solid #D8D8D8;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+    outline: none;
+}
+
+.dropdown-corte:focus {
+    border-color: #CE171F;
+    box-shadow: 0 0 0 3px rgba(206, 23, 31, 0.12);
+}
+
+.aviso-corte-obrigatorio {
+    color: #CE171F;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Evita que o dropdown ultrapasse a tela no celular. */
+@media (max-width: 768px) {
+    .area-selecao-corte {
+        max-width: 100%;
+    }
+
+    .dropdown-corte {
+        font-size: 16px;
+    }
+}
+
+
+/* =========================================
+   DROPDOWN PERSONALIZADO DE CORTES
+   ========================================= */
+
+.dropdown-corte-container {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-corte-botao {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 
     width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+
+    background: #FFFFFF;
+    border: 1px solid #D8D8D8;
+    border-radius: 10px;
+
+    color: #292929;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.dropdown-corte-botao.aberto,
+.dropdown-corte-botao:focus-visible {
+    border-color: #CE171F;
+    outline: 2px solid rgba(206, 23, 31, 0.15);
+}
+
+.dropdown-corte-seta {
+    font-size: 22px;
+    color: #777777;
+    line-height: 1;
+}
+
+.dropdown-corte-opcoes {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+
+    width: 100%;
+    max-height: 230px;
+    overflow-y: auto;
+
+    padding: 6px;
     box-sizing: border-box;
 
     background: #FFFFFF;
-    border-top: 4px solid #FFC20E;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 
-    z-index: 1000;
-  }
+    z-index: 1100;
+}
 
-  /* Reserva espaço para o rodapé não cobrir
-     os últimos produtos da lista */
+.dropdown-corte-opcao {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-  .tela-acougue {
-    padding-bottom: 220px;
-  }
+    width: 100%;
+    padding: 12px 14px;
 
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+
+    color: #292929;
+    font-size: 14px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.dropdown-corte-opcao:hover,
+.dropdown-corte-opcao:focus-visible {
+    background: #FFF4D6;
+    outline: none;
+}
+
+.dropdown-corte-opcao.selecionada {
+    background: #FFF0C2;
+    color: #A10E15;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+
+    .dropdown-corte-botao,
+    .dropdown-corte-opcao {
+        font-size: 16px;
+    }
+}
+
+
+/* =========================================
+   CORREÇÃO DO DROPDOWN DE CORTES
+   ========================================= */
+
+/* Permite que a lista ultrapasse os limites do rodapé */
+.carrinho-inferior {
+    overflow: visible;
+}
+
+/* Permite que as opções apareçam acima da lista do carrinho */
+.lista-carrinho,
+.item-carrinho,
+.nome-item,
+.area-selecao-corte {
+    overflow: visible;
+}
+
+/* Mantém o dropdown acima dos demais elementos */
+.area-selecao-corte {
+    position: relative;
+    z-index: 1200;
+}
+
+.dropdown-corte-container {
+    position: relative;
+    z-index: 1201;
+}
+
+/* Exibe a lista acima do botão */
+.dropdown-corte-opcoes {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    top: auto;
+
+    left: 0;
+    width: 100%;
+
+    max-height: min(320px, 50vh);
+    overflow-y: auto;
+
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    z-index: 1300;
+}
+
+
+/* =========================================
+   AJUSTE DO LAYOUT DO CARRINHO COM CORTES
+   ========================================= */
+
+/* Permite que o conteúdo do item ocupe
+   a altura necessária */
+.item-carrinho {
+    height: auto;
+    min-height: 90px;
+    overflow: visible;
+}
+
+/* Organiza nome, peso e dropdown verticalmente */
+.nome-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+}
+
+/* Reserva espaço para o seletor */
+.area-selecao-corte {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 8px;
+    position: relative;
+}
+
+/* Garante que a lista do carrinho
+   acompanhe a altura do conteúdo */
+.lista-carrinho {
+    height: auto;
+    min-height: 90px;
+    overflow: visible;
+}
+
+/* Mantém o rodapé flexível */
+.carrinho-inferior {
+    height: auto;
+    min-height: 110px;
+    overflow: visible;
+}
+
+
+.area-selecao-corte {
+    padding-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.aviso-corte-obrigatorio {
+    display: block;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+
+/* Aviso de cortes obrigatórios no modal */
+.aviso-cortes-pendentes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid #F2B6BA;
+    border-radius: 10px;
+    background: #FFF1F2;
+    color: #A10E15;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.aviso-cortes-pendentes strong {
+    overflow-wrap: anywhere;
+}
+
+
+/* =====================================
+   SELEÇÃO DE CORTES NO MODAL
+   ===================================== */
+
+.modal-area-corte {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.modal-area-corte label {
+    color: #292929;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.modal-dropdown-corte {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #D8D8D8;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #292929;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+}
+
+.modal-dropdown-corte:focus {
+    border-color: #CE171F;
+    box-shadow: 0 0 0 3px rgba(206, 23, 31, 0.12);
+}
+
+.modal-aviso-corte {
+    color: #CE171F;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+
+/* =====================================
+   DROPDOWN COMPACTO NO MODAL
+   ===================================== */
+
+.modal-area-corte {
+    flex: 0 0 150px;
+    width: 150px;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    align-self: center;
+    min-width: 0;
+}
+
+.modal-dropdown-corte {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    height: 36px;
+    padding: 6px 8px;
+
+    background: #FFFFFF;
+    color: #292929;
+    border: 1px solid #D8D8D8;
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 400;
+    box-sizing: border-box;
+}
+
+.modal-dropdown-corte:focus {
+    border-color: #CE171F;
+    outline: none;
+}
+
+/* Evita que o dropdown comprima as informações */
+.modal-info-produto {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Em celulares, mantém o campo compacto */
+@media (max-width: 600px) {
+    .modal-area-corte {
+        flex-basis: 130px;
+        width: 130px;
+    }
+
+    .modal-dropdown-corte {
+        font-size: 12px;
+    }
 }
 
