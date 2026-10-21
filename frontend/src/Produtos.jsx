@@ -7,6 +7,7 @@ const categorias = [
     "Bovina",
     "Suína",
     "Aves",
+    "Peixes",
     "Linguiças",
     "Temperados",
     "Ofertas",
@@ -17,14 +18,25 @@ function identificarCategoria(nome) {
     const texto = nome.toUpperCase();
 
     if (texto.includes("LINGUI")) return "Linguiças";
-    if (texto.includes("FRANGO") || texto.includes("AVE")) return "Aves";
+    if (texto.includes("FRANGO") ||
+        texto.includes("AVE") || 
+        texto.includes("GALETO") || 
+        texto.includes("CHESTER")
+    ) return "Aves";
     if (
         texto.includes("SUINO") ||
+        texto.includes("SUINA") ||
         texto.includes("SUÍNO") ||
         texto.includes("PORCO") ||
         texto.includes("PERNIL") ||
+        texto.includes("TORRESMO") ||
         texto.includes("LOMBO")
     ) return "Suína";
+    if (
+        texto.includes("PEIXE") ||
+        texto.includes("POLACA") ||
+        texto.includes("BACALHAU")
+    ) return "Peixes";
     if (
         texto.includes("TEMPER") ||
         texto.includes("MARINAD")
@@ -44,6 +56,7 @@ function identificarCategoria(nome) {
         texto.includes("COXÃO") ||
         texto.includes("ACEM") ||
         texto.includes("ACÉM") ||
+        texto.includes("CUPIM") ||
         texto.includes("CARNE")
     ) return "Bovina";
 
