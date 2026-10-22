@@ -1,6 +1,7 @@
-
-import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./Produtos.css";
+import Comprovante from "./Comprovante";
 
 const categorias = [
     "Todos",
@@ -113,6 +114,11 @@ function Produtos({ cliente }) {
         senha: "",
     });
     const [dropdownCorteAberto, setDropdownCorteAberto] = useState(null);
+    const [dropdownCorteModalAberto, setDropdownCorteModalAberto] =
+        useState(null);
+
+    const [comprovante, setComprovante] = useState(null);
+    const ultimoPedidoImpresso = useRef(null);
 
     useEffect(() => {
         async function carregarProdutos() {
@@ -284,6 +290,25 @@ function Produtos({ cliente }) {
         try {
             setEnviandoPedido(true);
 
+            // Impede o envio caso algum produto esteja sem corte obrigatório.
+            const itensSemCorte = carrinho.filter((item) => {
+                const cortes = item.cortesDisponiveis || [];
+
+                return (
+                    cortes.length > 0 &&
+                    !cortes.some(
+                        (corte) => corte.valor === item.corteSelecionado
+                    )
+                );
+            });
+
+            if (itensSemCorte.length > 0) {
+                alert(
+                    "Selecione o tipo de corte de todos os produtos antes de confirmar."
+                );
+                return;
+            }
+
             const resposta = await fetch(
                 "/api/pedidos",
                 {
@@ -298,6 +323,7 @@ function Produtos({ cliente }) {
                             quantidade: item.unidade === "kg"
                                 ? item.quantidade / 1000
                                 : item.quantidade,
+                            corteSelecionado: item.corteSelecionado || null
                         })),
                     }),
                 }
@@ -310,14 +336,37 @@ function Produtos({ cliente }) {
                 return;
             }
 
+            // O backend já confirmou a gravação no Oracle.
+            const pedidoConfirmado = dados.pedido;
+
+            // Guarda os dados reais do pedido para impressão.
+            setComprovante({
+                pedidoId: pedidoConfirmado.pedidoId,
+                senha: String(pedidoConfirmado.senha).padStart(3, "0"),
+                data: new Date().toLocaleString("pt-BR"),
+                itens: pedidoConfirmado.itens.map((item) => ({
+                    codigo: item.codprod,
+                    descricao: item.descricao,
+                    quantidade: item.quantidade,
+                    unidade: item.unidade,
+                    precoUnitario: item.precoUnitario,
+                    subtotal: item.subtotal,
+                    tipoCorte: item.tipoCorte,
+                })),
+                valorTotal: pedidoConfirmado.valorTotal,
+            });
+
+            // Limpa o carrinho normalmente.
             setCarrinho([]);
             setUltimoProdutoClicado(null);
             setModalConfirmacaoAberto(false);
 
+            // Mantém o modal de sucesso funcionando.
             setModalSucesso({
                 aberta: true,
-                senha: String(dados.pedido.senha).padStart(3, "0"),
+                senha: String(pedidoConfirmado.senha).padStart(3, "0"),
             });
+
         } catch (erro) {
             console.error("Erro ao enviar pedido:", erro);
             alert("Não foi possível conectar ao servidor.");
@@ -354,6 +403,28 @@ function Produtos({ cliente }) {
 
         return soma + item.preco * quantidade;
     }, 0);
+
+    useEffect(() => {
+        // Não imprime enquanto não houver comprovante.
+        if (!comprovante?.pedidoId) return;
+
+        // Evita disparar novamente a impressão do mesmo pedido.
+        if (ultimoPedidoImpresso.current === comprovante.pedidoId) {
+            return;
+        }
+
+        // Registra a tentativa antes de abrir a impressão.
+        ultimoPedidoImpresso.current = comprovante.pedidoId;
+
+        // Aguarda o React atualizar o conteúdo do comprovante.
+        const temporizador = setTimeout(() => {
+            window.print();
+        }, 300);
+
+        return () => clearTimeout(temporizador);
+    }, [comprovante]);
+
+
 
     return (
         <main className="tela-acougue">
@@ -573,26 +644,30 @@ function Produtos({ cliente }) {
                                                             id={`opcoes-corte-${item.id}`}
                                                             className="dropdown-corte-opcoes"
                                                         >
+
                                                             {item.cortesDisponiveis.map((corte) => (
                                                                 <button
                                                                     key={corte.valor}
                                                                     type="button"
                                                                     className={`dropdown-corte-opcao ${item.corteSelecionado === corte.valor
-                                                                        ? "selecionada"
+                                                                        ? "selecionado"
                                                                         : ""
                                                                         }`}
                                                                     onClick={() => {
                                                                         alterarCorte(item.id, corte.valor);
-                                                                        setDropdownCorteAberto(null);
+                                                                        setDropdownCorteModalAberto(null);
+                                                                        // Fecha automaticamente o dropdown do rodapé.
+                                                                        setDropdownCorteAberto(false);
                                                                     }}
                                                                 >
                                                                     <span>{corte.nome}</span>
 
                                                                     {item.corteSelecionado === corte.valor && (
-                                                                        <span aria-hidden="true">✓</span>
+                                                                        <span className="modal-corte-check">✓</span>
                                                                     )}
                                                                 </button>
                                                             ))}
+
                                                         </div>
                                                     )}
                                                 </div>
@@ -666,7 +741,11 @@ function Produtos({ cliente }) {
                 <button
                     className="botao-etiqueta"
                     disabled={carrinho.length === 0}
-                    onClick={() => setModalConfirmacaoAberto(true)}
+                    onClick={() => {
+                        setDropdownCorteAberto(false);
+                        setDropdownCorteModalAberto(null);
+                        setModalConfirmacaoAberto(true);
+                    }}
                 >
                     Gerar Pedido
                 </button>
@@ -710,28 +789,51 @@ function Produtos({ cliente }) {
                                     </strong>
 
                                     {/* Dropdown compacto para selecionar o corte */}
+
                                     {item.cortesDisponiveis?.length > 0 && (
                                         <div className="modal-area-corte">
-                                            <select
-                                                id={`modal-corte-${item.id}`}
-                                                className="modal-dropdown-corte"
-                                                aria-label={`Tipo de corte para ${item.nome}`}
-                                                value={item.corteSelecionado || ""}
-                                                onChange={(event) =>
-                                                    alterarCorte(item.id, event.target.value)
-                                                }
-                                            >
-                                                <option value="">Selecione o corte</option>
+                                            <div className="dropdown-corte-container modal-dropdown-personalizado">
 
-                                                {item.cortesDisponiveis.map((corte) => (
-                                                    <option
-                                                        key={corte.valor}
-                                                        value={corte.valor}
-                                                    >
-                                                        {corte.nome}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                <button
+                                                    type="button"
+                                                    className="dropdown-corte-botao"
+                                                    aria-expanded={dropdownCorteModalAberto === item.id}
+                                                    onClick={() =>
+                                                        setDropdownCorteModalAberto((atual) =>
+                                                            atual === item.id ? null : item.id
+                                                        )
+                                                    }
+                                                >
+                                                    <span>
+                                                        {item.cortesDisponiveis.find(
+                                                            (corte) =>
+                                                                corte.valor === item.corteSelecionado
+                                                        )?.nome || "Selecione o corte"}
+                                                    </span>
+
+                                                    <span aria-hidden="true">
+                                                        {dropdownCorteModalAberto === item.id ? "▲" : "▼"}
+                                                    </span>
+                                                </button>
+
+                                                {dropdownCorteModalAberto === item.id && (
+                                                    <div className="dropdown-corte-opcoes">
+                                                        {item.cortesDisponiveis.map((corte) => (
+                                                            <button
+                                                                key={corte.valor}
+                                                                type="button"
+                                                                className="dropdown-corte-opcao"
+                                                                onClick={() => {
+                                                                    alterarCorte(item.id, corte.valor);
+                                                                    setDropdownCorteModalAberto(null);
+                                                                }}
+                                                            >
+                                                                {corte.nome}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
 
@@ -857,6 +959,12 @@ function Produtos({ cliente }) {
                     </div>
                 </div>
             )}
+
+            {createPortal(
+                <Comprovante pedido={comprovante} />,
+                document.body
+            )}
+
         </main>
     );
 }

@@ -1518,3 +1518,167 @@
     }
 }
 
+
+/* Dropdown personalizado no modal de confirmação */
+
+.modal-area-corte {
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 0;
+    max-width: 100%;
+    align-self: center;
+    position: relative;
+    overflow: visible;
+}
+
+.modal-dropdown-personalizado {
+    position: relative;
+    width: 100%;
+}
+
+.modal-dropdown-personalizado .dropdown-corte-botao {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.modal-dropdown-personalizado .dropdown-corte-botao span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-dropdown-personalizado .dropdown-corte-opcoes {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.modal-dropdown-personalizado .dropdown-corte-opcao {
+    width: 100%;
+    font-size: 12px;
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    .modal-area-corte {
+        flex-basis: 130px;
+        width: 130px;
+    }
+}
+
+
+/* Faz o dropdown do modal abrir para baixo */
+.modal-dropdown-personalizado .dropdown-corte-opcoes {
+    top: calc(100% + 6px);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+
+/* Mantém o botão do modal compacto */
+.modal-dropdown-personalizado .dropdown-corte-botao {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+/* Lista com largura semelhante à do rodapé */
+.modal-dropdown-personalizado .dropdown-corte-opcoes {
+    top: calc(100% + 6px);
+    bottom: auto;
+    left: auto;
+    right: 0;
+    width: 280px;
+    max-width: calc(100vw - 40px);
+    max-height: 220px;
+    padding: 7px;
+    overflow-y: auto;
+    border-radius: 12px;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+/* Opções maiores, como no rodapé */
+.modal-dropdown-personalizado .dropdown-corte-opcao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+/* Destaca o corte selecionado */
+.modal-dropdown-personalizado .dropdown-corte-opcao.selecionado {
+    background: #FFF0C2;
+    color: #CE171F;
+    font-weight: 600;
+}
+
+/* Marca de seleção */
+.modal-corte-check {
+    color: #CE171F;
+    font-size: 15px;
+    font-weight: 700;
+    margin-left: 12px;
+}
+
+
+/* O item do modal aumenta de altura quando o dropdown abre */
+.modal-area-corte:has(.dropdown-corte-opcoes) {
+    align-self: stretch;
+}
+
+/* A lista de cortes passa a ocupar espaço no layout */
+.modal-dropdown-personalizado .dropdown-corte-opcoes {
+    position: static;
+    width: 280px;
+    max-width: 100%;
+    margin-top: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Evita que a lista ultrapasse a área do produto */
+.modal-dropdown-personalizado {
+    position: relative;
+}
+
+
+/* Fundo escuro acima do rodapé e dos dropdowns */
+.modal-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+/* Modal acima do próprio fundo escuro */
+.modal-confirmacao {
+    position: relative;
+    z-index: 1;
+}
+
+
+

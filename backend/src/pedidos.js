@@ -95,30 +95,34 @@ router.post("/", async (req, res) => {
                 A.DESCRICAO,
                 E.UNIDADE,
                 
-E.PVENDA,
-(
-    F.QTESTGER
-    - F.QTBLOQUEADA
-    - F.QTINDENIZ
-    - F.QTRESERV
-) AS EST_LIQUIDO,
+                E.PVENDA,
+                (
+                    F.QTESTGER
+                    - F.QTBLOQUEADA
+                    - F.QTINDENIZ
+                    - F.QTRESERV
+                ) AS EST_LIQUIDO,
 
--- Cortes permitidos para o produto.
-C.BIFE,
-C.MANTA,
-C.PEDACO,
-C.MOIDO,
-C.STROGONOFF,
-C.RIPA_PICADA,
-C.MINGA_MANTA,
-C.MINGA_PEDACO,
-C.PICADO,
-C.FATIADO,
-C.PECA,
-C.INTEIRO,
-C.A_PASSARINHO
+                -- Cortes permitidos para o produto.
+                C.BIFE,
+                C.MANTA,
+                C.PEDACO,
+                C.MOIDO,
+                C.STROGONOFF,
+                C.RIPA_PICADA,
+                C.MINGA_MANTA,
+                C.MINGA_PEDACO,
+                C.PICADO,
+                C.FATIADO,
+                C.PECA,
+                C.INTEIRO,
+                C.A_PASSARINHO
 
             FROM HOMOLOGA.PCPRODUT A
+            
+            LEFT JOIN HOMOLOGA.CF_PRODUTOS_CORTES C
+                ON C.CODPROD = A.CODPROD
+
             JOIN HOMOLOGA.PCSUBCATEGORIA S
                 ON S.CODSUBCATEGORIA = A.CODSUBCATEGORIA
                AND S.CODSEC = A.CODSEC
@@ -168,6 +172,53 @@ C.A_PASSARINHO
             produtos.map((produto) => [produto.CODPROD, produto])
         );
 
+
+        // Valida os cortes de todos os itens antes de gravar o pedido.
+        for (const item of itens) {
+            const produto = produtosPorCodigo.get(item.idProduto);
+
+            const cortesPermitidos = CAMPOS_CORTES.filter(
+                (campo) =>
+                    String(produto[campo] ?? "")
+                        .trim()
+                        .toUpperCase() === "S"
+            );
+
+            const corteSelecionado =
+                typeof item.corteSelecionado === "string"
+                    ? item.corteSelecionado.trim().toUpperCase()
+                    : "";
+
+            // Se existem cortes disponíveis, a seleção é obrigatória.
+            if (
+                cortesPermitidos.length > 0 &&
+                !cortesPermitidos.includes(corteSelecionado)
+            ) {
+                await conexao.rollback();
+                transacaoIniciada = false;
+
+                return res.status(400).json({
+                    mensagem:
+                        `Selecione um tipo de corte válido para ${produto.DESCRICAO}.`,
+                });
+            }
+
+            // Produtos sem cortes cadastrados não devem receber um corte.
+            if (
+                cortesPermitidos.length === 0 &&
+                corteSelecionado !== ""
+            ) {
+                await conexao.rollback();
+                transacaoIniciada = false;
+
+                return res.status(400).json({
+                    mensagem:
+                        `O produto ${produto.DESCRICAO} não possui cortes disponíveis.`,
+                });
+            }
+        }
+
+
         // 5. Calcular os valores usando os preços do Oracle.
         const itensCalculados = itens.map((item) => {
             const produto = produtosPorCodigo.get(item.idProduto);
@@ -182,6 +233,7 @@ C.A_PASSARINHO
                 quantidade * precoUnitario * 100
             ) / 100;
 
+
             return {
                 codprod: produto.CODPROD,
                 descricao: produto.DESCRICAO,
@@ -189,7 +241,13 @@ C.A_PASSARINHO
                 unidade: produto.UNIDADE,
                 precoUnitario,
                 subtotal,
+
+                // Guarda o corte para inserir no Oracle.
+                tipoCorte: item.corteSelecionado
+                    ? item.corteSelecionado.trim().toUpperCase()
+                    : null,
             };
+
         });
 
         const valorTotal = Math.round(
@@ -256,6 +314,7 @@ C.A_PASSARINHO
 
         // 9. Gravar cada item relacionado ao pedido.
         for (const item of itensCalculados) {
+
             await conexao.execute(
                 `INSERT INTO HOMOLOGA.CF_TOTEM_PEDIDO_ITEM (
                     ID_ITEM,
@@ -265,7 +324,8 @@ C.A_PASSARINHO
                     QUANTIDADE,
                     UNIDADE_MEDIDA,
                     PRECO_UNITARIO,
-                    SUBTOTAL
+                    SUBTOTAL,
+                    TIPO_CORTE
                 ) VALUES (
                     HOMOLOGA.SEQ_CF_TOTEM_PEDIDO_ITEM.NEXTVAL,
                     :idPedido,
@@ -274,7 +334,8 @@ C.A_PASSARINHO
                     :quantidade,
                     :unidade,
                     :precoUnitario,
-                    :subtotal
+                    :subtotal,
+                    :tipoCorte
                 )`,
                 {
                     idPedido,
@@ -284,8 +345,10 @@ C.A_PASSARINHO
                     unidade: item.unidade,
                     precoUnitario: item.precoUnitario,
                     subtotal: item.subtotal,
+                    tipoCorte: item.tipoCorte,
                 }
             );
+
         }
 
         // 10. Confirmar tudo somente depois de inserir os itens.

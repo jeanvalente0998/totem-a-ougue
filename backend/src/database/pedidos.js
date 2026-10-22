@@ -23,7 +23,8 @@ async function consultarPedidos() {
                 I.QUANTIDADE,
                 I.UNIDADE_MEDIDA,
                 I.PRECO_UNITARIO,
-                I.SUBTOTAL
+                I.SUBTOTAL,
+                I.TIPO_CORTE
             FROM HOMOLOGA.CF_TOTEM_PEDIDO P
             LEFT JOIN HOMOLOGA.CF_TOTEM_PEDIDO_ITEM I
                 ON I.ID_PEDIDO = P.ID_PEDIDO

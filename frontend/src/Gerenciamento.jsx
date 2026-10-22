@@ -67,6 +67,8 @@ function Gerenciamento() {
                                 UNIDADE_MEDIDA: registro.UNIDADE_MEDIDA,
                                 PRECO_UNITARIO: registro.PRECO_UNITARIO,
                                 SUBTOTAL: registro.SUBTOTAL,
+                                // Tipo de corte selecionado pelo cliente
+                                TIPO_CORTE: registro.TIPO_CORTE,
                             });
                         }
 
