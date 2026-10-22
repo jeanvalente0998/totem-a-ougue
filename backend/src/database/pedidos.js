@@ -50,6 +50,67 @@ async function consultarPedidos() {
     }
 }
 
+
+// Atualiza o status de um pedido respeitando a ordem de preparação.
+async function atualizarStatusPedido(idPedido, novoStatus) {
+    let conexao;
+
+    const transicoesPermitidas = {
+        EM_PREPARACAO: "AGUARDANDO_SEPARACAO",
+        PRONTO_RETIRADA: "EM_PREPARACAO",
+    };
+
+    const statusAnterior = transicoesPermitidas[novoStatus];
+
+    if (!statusAnterior) {
+        throw new Error("Transição de status inválida.");
+    }
+
+    try {
+        conexao = await obterConexao();
+
+        const sql = `
+            UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
+            SET STATUS = :novoStatus
+            WHERE ID_PEDIDO = :idPedido
+              AND STATUS = :statusAnterior
+        `;
+
+        const resultado = await conexao.execute(
+            sql,
+            {
+                novoStatus,
+                idPedido,
+                statusAnterior,
+            },
+            { autoCommit: false }
+        );
+
+        if (resultado.rowsAffected !== 1) {
+            await conexao.rollback();
+            return false;
+        }
+
+        await conexao.commit();
+
+        return true;
+
+    } catch (erro) {
+        if (conexao) {
+            await conexao.rollback();
+        }
+
+        throw erro;
+
+    } finally {
+        if (conexao) {
+            await conexao.close();
+        }
+    }
+}
+
+
 module.exports = {
     consultarPedidos,
+    atualizarStatusPedido,
 };

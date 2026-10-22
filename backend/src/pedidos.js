@@ -8,6 +8,8 @@ const {
     consultarClientePorCpf,
 } = require("./database/oracle");
 
+const { atualizarStatusPedido } = require("./database/pedidos");
+
 // Colunas que representam os tipos de corte no Oracle.
 const CAMPOS_CORTES = [
     "BIFE",
@@ -396,5 +398,60 @@ router.post("/", async (req, res) => {
         }
     }
 });
+
+
+// Atualiza o status de preparação de um pedido.
+router.patch("/:id/status", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+        const { status } = req.body ?? {};
+
+        // Valida o identificador do pedido.
+        if (!Number.isSafeInteger(idPedido) || idPedido <= 0) {
+            return res.status(400).json({
+                mensagem: "Identificador do pedido inválido.",
+            });
+        }
+
+        // Aceita somente os próximos status previstos.
+        const statusPermitidos = [
+            "EM_PREPARACAO",
+            "PRONTO_RETIRADA",
+        ];
+
+        if (!statusPermitidos.includes(status)) {
+            return res.status(400).json({
+                mensagem: "Status informado é inválido.",
+            });
+        }
+
+        // Executa a atualização condicional no Oracle.
+        const atualizado = await atualizarStatusPedido(
+            idPedido,
+            status
+        );
+
+        if (!atualizado) {
+            return res.status(409).json({
+                mensagem:
+                    "Pedido não encontrado ou não está na etapa esperada.",
+            });
+        }
+
+        return res.status(200).json({
+            mensagem: "Status atualizado com sucesso.",
+            pedidoId: idPedido,
+            status,
+        });
+
+    } catch (erro) {
+        console.error("Erro ao atualizar status do pedido:", erro);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível atualizar o status do pedido.",
+        });
+    }
+});
+
 
 module.exports = router;

@@ -1,4 +1,3 @@
-
 .pagina-gerenciamento {
   min-height: 100vh;
   padding: 32px;
@@ -81,5 +80,400 @@
 
   .conteudo-gerenciamento {
     padding: 22px;
+  }
+}
+
+
+/* ===== LISTAGEM DE PEDIDOS ===== */
+
+.lista-pedidos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.lista-pedidos>p {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* ===== CARD DO PEDIDO ===== */
+
+.card-pedido {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  min-width: 0;
+}
+
+/* ===== CABEÇALHO ===== */
+
+.card-pedido-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-pedido-cabecalho h3 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 800;
+  color: #202020;
+}
+
+.card-pedido-cabecalho p {
+  margin: 5px 0 0;
+  color: #777;
+  font-size: 13px;
+}
+
+.card-pedido-status {
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 20px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* ===== PRODUTOS ===== */
+
+.card-pedido-itens {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 0;
+}
+
+.card-pedido-item {
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.card-pedido-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.card-pedido-item strong {
+  font-size: 14px;
+}
+
+.card-pedido-item p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.card-pedido-item .card-pedido-corte {
+  color: #a71930;
+  font-weight: 500;
+}
+
+/* ===== RODAPÉ ===== */
+
+.card-pedido-rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.card-pedido-rodape span {
+  color: #666;
+  font-size: 13px;
+}
+
+.card-pedido-rodape strong {
+  color: #202020;
+  font-size: 19px;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 1100px) {
+  .lista-pedidos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .lista-pedidos {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== DESTAQUE DA SENHA ===== */
+
+.card-pedido-label-senha {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #777;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.card-pedido-cabecalho h3 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #202020;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== STATUS DO PEDIDO EM DUAS LINHAS ===== */
+
+.card-pedido-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 115px;
+  min-height: 52px;
+  padding: 8px 10px;
+
+  text-align: center;
+  white-space: normal;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+/* ===== AUMENTAR FONTE DO STATUS ===== */
+
+.card-pedido-status {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  width: 130px;
+  min-height: 60px;
+
+  text-align: center;
+}
+
+/* ===== AÇÕES DO PEDIDO ===== */
+
+.card-pedido-acoes {
+  margin-top: 18px;
+}
+
+.botao-iniciar-preparacao {
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 9px;
+
+  background: #a71930;
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.botao-iniciar-preparacao:hover:not(:disabled) {
+  background: #851327;
+}
+
+.botao-iniciar-preparacao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== CORES DINÂMICAS DOS STATUS ===== */
+
+/* Aguardando separação - amarelo */
+.card-pedido-status.status-aguardando {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Em preparação - azul */
+.card-pedido-status.status-preparacao {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Pronto para retirada - verde */
+.card-pedido-status.status-pronto {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ===== BOTÃO FINALIZAR PREPARAÇÃO ===== */
+
+.botao-finalizar-preparacao {
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 9px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition: background 0.2s ease;
+}
+
+.botao-finalizar-preparacao:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.botao-finalizar-preparacao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== PEDIDO PRONTO ===== */
+
+.pedido-finalizado {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 9px;
+
+  background: #dcfce7;
+  color: #166534;
+
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.coluna-kanban-vazia {
+  padding: 24px 12px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+}
+
+
+/* ===== CORREÇÃO DO LAYOUT KANBAN ===== */
+
+/* Quadro principal: três colunas lado a lado */
+.conteudo-gerenciamento .quadro-kanban {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  align-items: start;
+}
+
+/* Cada coluna ocupa apenas seu espaço */
+.conteudo-gerenciamento .coluna-kanban {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* Cores das colunas */
+.conteudo-gerenciamento .coluna-aguardando {
+  background: #fff9e6;
+}
+
+.conteudo-gerenciamento .coluna-preparacao {
+  background: #eff6ff;
+}
+
+.conteudo-gerenciamento .coluna-prontos {
+  background: #f0fdf4;
+}
+
+/* Pedidos empilhados dentro de cada coluna */
+.conteudo-gerenciamento .coluna-kanban-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Cards limitados à largura da coluna */
+.conteudo-gerenciamento .coluna-kanban .card-pedido {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 1000px) {
+  .conteudo-gerenciamento .quadro-kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ===== NOTIFICAÇÃO DE NOVOS PEDIDOS ===== */
+
+.alerta-novo-pedido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 18px 22px;
+  margin-bottom: 20px;
+
+  background: #fff3cd;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+
+  color: #856404;
+  animation: entrada-alerta 0.4s ease;
+}
+
+.alerta-novo-pedido strong {
+  font-size: 18px;
+}
+
+.alerta-novo-pedido p {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.alerta-novo-pedido button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+
+  background: #a71930;
+  color: #fff;
+
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes entrada-alerta {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
