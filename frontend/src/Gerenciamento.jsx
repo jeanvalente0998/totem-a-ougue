@@ -24,10 +24,37 @@ function Gerenciamento() {
     // Indica se já realizamos a primeira consulta.
     const primeiraConsultaConcluida = useRef(false);
 
+    const [somHabilitado, setSomHabilitado] = useState(false);
+
+    const contextoAudio = useRef(null);
+    const somHabilitadoRef = useRef(false);
+
+    const [codigoLido, setCodigoLido] = useState("");
+    const [resultadoLeitura, setResultadoLeitura] = useState(null);
+
+    const bufferScanner = useRef("");
+    const ultimoCaractereScanner = useRef(0);
+
+    const identificarPedidoRef = useRef(null);
+    identificarPedidoRef.current = identificarPedido;
+
+    const [ultimoPedidoLido, setUltimoPedidoLido] = useState(null);
+
+    // Atualiza o tempo usado para identificar pedidos novos.
+    const [agora, setAgora] = useState(() => Date.now());
+
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            setAgora(Date.now());
+        }, 5000);
+
+        return () => clearInterval(intervalo);
+    }, []);
+
 
     // Organiza os pedidos conforme a etapa de preparação.
     const pedidosAguardando = pedidos.filter(
-        (pedido) => pedido.STATUS === "AGUARDANDO_SEPARACAO"
+        (pedido) => pedido.STATUS === "AGUARDANDO_PREPARACAO"
     );
 
     const pedidosEmPreparacao = pedidos.filter(
@@ -42,7 +69,7 @@ function Gerenciamento() {
     const colunasKanban = [
         {
             id: "aguardando",
-            titulo: "Aguardando separação",
+            titulo: "Aguardando preparação",
             pedidos: pedidosAguardando,
         },
         {
@@ -57,6 +84,29 @@ function Gerenciamento() {
         },
     ];
 
+    const TEMPO_PEDIDO_NOVO = 5 * 60 * 1000;
+
+    // Verifica se o pedido ainda deve receber o destaque NOVO.
+    function pedidoEhNovo(pedido, agora) {
+        // Somente pedidos aguardando preparação podem ser novos.
+        if (pedido.STATUS !== "AGUARDANDO_PREPARACAO") {
+            return false;
+        }
+
+        const dataPedido = new Date(pedido.DATA_PEDIDO).getTime();
+
+        // Não destaca pedidos com data inválida.
+        if (!Number.isFinite(dataPedido)) {
+            return false;
+        }
+
+        const tempoDecorrido = agora - dataPedido;
+
+        return (
+            tempoDecorrido >= 0 &&
+            tempoDecorrido < TEMPO_PEDIDO_NOVO
+        );
+    }
 
     // Envia a atualização do pedido para o backend.
     async function alterarStatusPedido(idPedido, novoStatus) {
@@ -96,6 +146,11 @@ function Gerenciamento() {
                 )
             );
 
+            // Remove o destaque após a atualização bem-sucedida.
+            setNovosPedidos((anteriores) =>
+                anteriores.filter((id) => id !== idPedido)
+            );
+
         } catch (error) {
             console.error("Erro ao alterar status:", error);
             setErro(error.message);
@@ -104,6 +159,88 @@ function Gerenciamento() {
         }
     }
 
+
+    function tocarAlerta() {
+        if (!somHabilitadoRef.current) return;
+
+        const audio = contextoAudio.current;
+
+        if (!audio || audio.state !== "running") return;
+
+        try {
+            // Reproduz dois sinais sonoros curtos.
+            [0, 0.3].forEach((atraso) => {
+                const oscilador = audio.createOscillator();
+                const volume = audio.createGain();
+
+                oscilador.type = "sine";
+                oscilador.frequency.value = 880;
+
+                volume.gain.setValueAtTime(
+                    0.0001,
+                    audio.currentTime + atraso
+                );
+
+                volume.gain.exponentialRampToValueAtTime(
+                    0.18,
+                    audio.currentTime + atraso + 0.02
+                );
+
+                volume.gain.exponentialRampToValueAtTime(
+                    0.0001,
+                    audio.currentTime + atraso + 0.2
+                );
+
+                oscilador.connect(volume);
+                volume.connect(audio.destination);
+
+                oscilador.start(audio.currentTime + atraso);
+                oscilador.stop(audio.currentTime + atraso + 0.21);
+            });
+        } catch (error) {
+            console.error("Erro ao reproduzir alerta:", error);
+        }
+    }
+
+
+    async function alternarSom() {
+        // Se estiver habilitado, desativa o alerta.
+        if (somHabilitadoRef.current) {
+            somHabilitadoRef.current = false;
+            setSomHabilitado(false);
+            return;
+        }
+
+        // Se estiver desabilitado, habilita novamente.
+        try {
+            const AudioContext =
+                window.AudioContext || window.webkitAudioContext;
+
+            if (!AudioContext) {
+                throw new Error("Navegador sem suporte a áudio.");
+            }
+
+            if (!contextoAudio.current) {
+                contextoAudio.current = new AudioContext();
+            }
+
+            await contextoAudio.current.resume();
+
+            if (contextoAudio.current.state !== "running") {
+                throw new Error("O áudio não foi liberado.");
+            }
+
+            somHabilitadoRef.current = true;
+            setSomHabilitado(true);
+
+            // Reproduz um sinal para confirmar a ativação.
+            tocarAlerta();
+
+        } catch (error) {
+            console.error("Erro ao alternar o som:", error);
+            alert("Não foi possível habilitar o áudio.");
+        }
+    }
 
 
     useEffect(() => {
@@ -215,6 +352,9 @@ function Gerenciamento() {
                         });
 
                         console.log("Novos pedidos detectados:", pedidosNovos);
+
+                        // Reproduz o alerta quando novos pedidos são detectados.
+                        tocarAlerta();
                     }
 
                     // Atualiza a lista de IDs conhecidos.
@@ -265,6 +405,152 @@ function Gerenciamento() {
 
     }, []);
 
+
+    async function identificarPedido(codigoRecebido) {
+        const codigo = codigoRecebido.trim().toUpperCase();
+
+        const correspondencia = /^PED-([1-9]\d*)$/.exec(codigo);
+
+        if (!correspondencia) {
+            setResultadoLeitura({
+                sucesso: false,
+                mensagem: "Código de barras inválido.",
+            });
+            setCodigoLido("");
+            return;
+        }
+
+        const idPedido = Number(correspondencia[1]);
+
+        if (!Number.isSafeInteger(idPedido)) {
+            setResultadoLeitura({
+                sucesso: false,
+                mensagem: "Identificador do pedido inválido.",
+            });
+            setCodigoLido("");
+            return;
+        }
+
+        try {
+            setResultadoLeitura({
+                sucesso: true,
+                mensagem: `Processando pedido #${idPedido}...`,
+            });
+
+            const resposta = await fetch("/api/pedidos/scan", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ codigo }),
+            });
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                setResultadoLeitura({
+                    sucesso: false,
+                    mensagem: dados.mensagem || "Erro ao processar pedido.",
+                });
+                return;
+            }
+
+            const pedidoEncontrado = pedidos.find(
+                (pedido) => Number(pedido.ID_PEDIDO) === idPedido
+            );
+
+            setUltimoPedidoLido({
+                idPedido,
+                senha: pedidoEncontrado?.SENHA ?? null,
+                status: dados.status,
+            });
+
+            setResultadoLeitura({
+                sucesso: true,
+                mensagem: `Pedido #${idPedido} atualizado: ${dados.statusAnterior} → ${dados.status}`,
+            });
+
+            console.log("Pedido atualizado pelo scanner:", dados);
+
+            // O polling existente atualizará o Kanban automaticamente.
+
+        } catch (erro) {
+            console.error("Erro na leitura do scanner:", erro);
+
+            setResultadoLeitura({
+                sucesso: false,
+                mensagem: "Não foi possível comunicar com o servidor.",
+            });
+
+        } finally {
+            setCodigoLido("");
+        }
+    }
+
+    function processarCodigoBarras(evento) {
+        evento.preventDefault();
+        identificarPedido(codigoLido);
+    }
+
+    useEffect(() => {
+        function capturarScanner(evento) {
+            // Não interfere em campos de digitação manual.
+            const elemento = evento.target;
+
+            if (
+                elemento instanceof HTMLElement &&
+                (
+                    elemento.isContentEditable ||
+                    ["INPUT", "TEXTAREA", "SELECT"].includes(elemento.tagName)
+                )
+            ) {
+                return;
+            }
+
+            const agora = Date.now();
+
+            // Reinicia o buffer se houver pausa entre caracteres.
+            if (agora - ultimoCaractereScanner.current > 150) {
+                bufferScanner.current = "";
+            }
+
+            ultimoCaractereScanner.current = agora;
+
+            // Finaliza a leitura quando o scanner envia Enter.
+            if (evento.key === "Enter") {
+                const codigo = bufferScanner.current.trim().toUpperCase();
+
+                bufferScanner.current = "";
+
+                if (/^PED-[1-9]\d*$/.test(codigo)) {
+                    evento.preventDefault();
+
+                    // Envia o código para o campo de leitura.
+                    identificarPedidoRef.current?.(codigo);
+                }
+
+                return;
+            }
+
+            // Armazena os caracteres enviados pelo scanner.
+            if (
+                evento.key.length === 1 &&
+                !evento.ctrlKey &&
+                !evento.altKey &&
+                !evento.metaKey
+            ) {
+                bufferScanner.current += evento.key;
+            }
+        }
+
+        window.addEventListener("keydown", capturarScanner);
+
+        return () => {
+            window.removeEventListener("keydown", capturarScanner);
+        };
+    }, []);
+
+
     return (
         <main className="pagina-gerenciamento">
 
@@ -283,29 +569,173 @@ function Gerenciamento() {
 
                 <h2>Pedidos recebidos</h2>
 
-                {/* Aviso visual de novos pedidos */}
-                {notificacaoNovoPedido && (
-                    <div className="alerta-novo-pedido">
 
+                {/* Leitura de códigos de barras */}
+                <div className="leitor-pedidos">
+
+                    <div className="leitor-pedidos-cabecalho">
                         <div>
-                            <strong>🔔 Novo pedido recebido!</strong>
-
                             <p>
-                                {notificacaoNovoPedido.quantidade === 1
-                                    ? "Um novo pedido chegou do totem."
-                                    : `${notificacaoNovoPedido.quantidade} novos pedidos chegaram do totem.`}
-                            </p>
-
-                            <p>
-                                Senha(s): {notificacaoNovoPedido.senhas.join(", ")}
+                                Escaneie o código de barras do comprovante
+                                para identificar o pedido.
                             </p>
                         </div>
+                    </div>
 
+
+                    {ultimoPedidoLido && resultadoLeitura?.sucesso ? (
+                        <div
+                            className={`leitor-pedido-identificado ${ultimoPedidoLido.status === "EM_PREPARACAO"
+                                ? "painel-em-preparacao"
+                                : ultimoPedidoLido.status === "PRONTO_RETIRADA"
+                                    ? "painel-pronto-retirada"
+                                    : ""
+                                }`}
+                            role="status"
+                        >
+                            <span className="leitor-senha-label">
+                                SENHA DE RETIRADA
+                            </span>
+
+                            <strong className="leitor-senha-numero">
+                                {ultimoPedidoLido.senha != null
+                                    ? String(ultimoPedidoLido.senha).padStart(3, "0")
+                                    : "—"}
+                            </strong>
+
+                            <span className="leitor-pedido-numero">
+                                Pedido #{ultimoPedidoLido.idPedido}
+                            </span>
+
+                            <span className="leitor-pedido-status">
+                                {ultimoPedidoLido.status === "EM_PREPARACAO"
+                                    ? "Em preparação"
+                                    : ultimoPedidoLido.status === "PRONTO_RETIRADA"
+                                        ? "Pronto para retirada"
+                                        : ultimoPedidoLido.status}
+                            </span>
+                        </div>
+                    ) : resultadoLeitura ? (
+                        <div
+                            className={`leitor-pedidos-resultado ${resultadoLeitura.sucesso
+                                ? "leitura-sucesso"
+                                : "leitura-erro"
+                                }`}
+                            role="status"
+                        >
+                            {resultadoLeitura.mensagem}
+                        </div>
+                    ) : (
+                        <div className="leitor-pedido-aguardando">
+                        </div>
+                    )}
+
+                </div>
+
+                {/* Controle de notificações sonoras */}
+                <div className="controle-som">
+
+                    <div className="controle-som-informacoes">
+                        <strong>Notificações sonoras</strong>
+                        <span>Alertas de novos pedidos</span>
+                    </div>
+
+                    <button
+                        type="button"
+                        className={`botao-controle-som ${somHabilitado ? "som-ativo" : "som-inativo"
+                            }`}
+                        onClick={alternarSom}
+                        aria-pressed={somHabilitado}
+                        aria-label={
+                            somHabilitado
+                                ? "Desativar notificações sonoras"
+                                : "Ativar notificações sonoras"
+                        }
+                    >
+                        <span className="controle-som-icone" aria-hidden="true">
+                            {somHabilitado ? "♪" : "♪"}
+                        </span>
+
+                        <span className="controle-som-texto">
+                            {somHabilitado ? "Ativado" : "Desativado"}
+                        </span>
+
+                        <span className="controle-som-switch" aria-hidden="true">
+                            <span className="controle-som-switch-bola"></span>
+                        </span>
+                    </button>
+
+                </div>
+
+
+                {/* Notificação visual de novos pedidos */}
+                {notificacaoNovoPedido && (
+                    <div
+                        className="alerta-novo-pedido"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {/* Ícone do alerta */}
+                        <div className="alerta-pedido-icone">
+                            <svg
+                                width="22"
+                                height="22"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                                <path d="M10 21h4" />
+                            </svg>
+                        </div>
+
+                        {/* Informações do pedido */}
+                        <div className="alerta-pedido-conteudo">
+
+                            <div className="alerta-pedido-titulo">
+                                <strong>
+                                    {notificacaoNovoPedido.quantidade === 1
+                                        ? "Novo pedido recebido"
+                                        : "Novos pedidos recebidos"}
+                                </strong>
+
+                                <span className="alerta-pedido-badge">
+                                    Novo
+                                </span>
+                            </div>
+
+                            <div className="alerta-pedido-senhas">
+                                <span>
+                                    {notificacaoNovoPedido.quantidade === 1
+                                        ? "Senha"
+                                        : "Senhas"}
+                                </span>
+
+                                {notificacaoNovoPedido.senhas.map((senha, index) => (
+                                    <strong
+                                        key={`${senha}-${index}`}
+                                        className="alerta-pedido-senha"
+                                    >
+                                        {senha}
+                                    </strong>
+                                ))}
+                            </div>
+
+                        </div>
+
+                        {/* Botão para dispensar a notificação */}
                         <button
                             type="button"
+                            className="alerta-pedido-fechar"
                             onClick={() => setNotificacaoNovoPedido(null)}
+                            aria-label="Fechar notificação"
+                            title="Fechar notificação"
                         >
-                            Fechar
+                            ×
                         </button>
 
                     </div>
@@ -350,15 +780,23 @@ function Gerenciamento() {
 
                                 {/* Pedidos da coluna */}
                                 <div className="coluna-kanban-pedidos">
-
                                     {coluna.pedidos.map((pedido) => (
                                         <div
                                             key={pedido.ID_PEDIDO}
-                                            className="card-pedido"
+                                            className={`card-pedido ${pedidoEhNovo(pedido, agora)
+                                                ? "card-pedido-novo"
+                                                : ""
+                                                }`}
                                         >
-
                                             {/* Cabeçalho do pedido */}
                                             <div className="card-pedido-cabecalho">
+
+                                                {/* Identificação de pedido recém-chegado */}
+                                                {pedidoEhNovo(pedido, agora) && (
+                                                    <span className="card-pedido-etiqueta-novo">
+                                                        NOVO
+                                                    </span>
+                                                )}
                                                 <div>
                                                     <span className="card-pedido-label-senha">
                                                         SENHA
@@ -372,7 +810,7 @@ function Gerenciamento() {
                                                 </div>
 
                                                 <span
-                                                    className={`card-pedido-status ${pedido.STATUS === "AGUARDANDO_SEPARACAO"
+                                                    className={`card-pedido-status ${pedido.STATUS === "AGUARDANDO_PREPARACAO"
                                                         ? "status-aguardando"
                                                         : pedido.STATUS === "EM_PREPARACAO"
                                                             ? "status-preparacao"
@@ -434,7 +872,7 @@ function Gerenciamento() {
                                             <div className="card-pedido-acoes">
 
                                                 {/* Pedido aguardando: permite iniciar */}
-                                                {pedido.STATUS === "AGUARDANDO_SEPARACAO" && (
+                                                {pedido.STATUS === "AGUARDANDO_PREPARACAO" && (
                                                     <button
                                                         type="button"
                                                         className="botao-iniciar-preparacao"

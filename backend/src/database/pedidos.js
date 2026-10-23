@@ -28,6 +28,8 @@ async function consultarPedidos() {
             FROM HOMOLOGA.CF_TOTEM_PEDIDO P
             LEFT JOIN HOMOLOGA.CF_TOTEM_PEDIDO_ITEM I
                 ON I.ID_PEDIDO = P.ID_PEDIDO
+            WHERE P.DATA_PEDIDO >= TRUNC(SYSDATE)
+            AND P.DATA_PEDIDO < TRUNC(SYSDATE) + 1
             ORDER BY
                 P.DATA_PEDIDO DESC,
                 P.ID_PEDIDO DESC,
@@ -56,7 +58,7 @@ async function atualizarStatusPedido(idPedido, novoStatus) {
     let conexao;
 
     const transicoesPermitidas = {
-        EM_PREPARACAO: "AGUARDANDO_SEPARACAO",
+        EM_PREPARACAO: "AGUARDANDO_PREPARACAO",
         PRONTO_RETIRADA: "EM_PREPARACAO",
     };
 
@@ -109,8 +111,89 @@ async function atualizarStatusPedido(idPedido, novoStatus) {
     }
 }
 
+/**
+ * Avança o pedido para a próxima etapa após leitura
+ * do código de barras.
+ */
+async function avancarPedidoPorScanner(idPedido) {
+    let conexao;
+
+    try {
+        conexao = await obterConexao();
+
+        // Bloqueia o registro durante a transação.
+        const consulta = await conexao.execute(
+            `SELECT STATUS
+             FROM HOMOLOGA.CF_TOTEM_PEDIDO
+             WHERE ID_PEDIDO = :idPedido
+             FOR UPDATE`,
+            { idPedido },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        if (consulta.rows.length === 0) {
+            await conexao.rollback();
+
+            return {
+                resultado: "NAO_ENCONTRADO",
+            };
+        }
+
+        const statusAnterior = consulta.rows[0].STATUS;
+
+        const transicoes = {
+            AGUARDANDO_PREPARACAO: "EM_PREPARACAO",
+            EM_PREPARACAO: "PRONTO_RETIRADA",
+        };
+
+        const novoStatus = transicoes[statusAnterior];
+
+        if (!novoStatus) {
+            await conexao.rollback();
+
+            return {
+                resultado: "SEM_TRANSICAO",
+                statusAnterior,
+            };
+        }
+
+        await conexao.execute(
+            `UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
+             SET STATUS = :novoStatus
+             WHERE ID_PEDIDO = :idPedido
+               AND STATUS = :statusAnterior`,
+            {
+                novoStatus,
+                idPedido,
+                statusAnterior,
+            },
+            { autoCommit: false }
+        );
+
+        await conexao.commit();
+
+        return {
+            resultado: "ATUALIZADO",
+            statusAnterior,
+            novoStatus,
+        };
+
+    } catch (erro) {
+        if (conexao) {
+            await conexao.rollback();
+        }
+
+        throw erro;
+
+    } finally {
+        if (conexao) {
+            await conexao.close();
+        }
+    }
+}
 
 module.exports = {
     consultarPedidos,
     atualizarStatusPedido,
+    avancarPedidoPorScanner,
 };

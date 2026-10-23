@@ -1,7 +1,34 @@
 
+import { useLayoutEffect, useRef } from "react";
+import JsBarcode from "jsbarcode";
 import "./Comprovante.css";
 
 function Comprovante({ pedido }) {
+
+    const codigoBarrasRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (!pedido?.pedidoId || !codigoBarrasRef.current) return;
+
+        const codigo = `PED-${pedido.pedidoId}`;
+
+        try {
+            JsBarcode(codigoBarrasRef.current, codigo, {
+                format: "CODE128",
+                width: 1.5,
+                height: 55,
+                displayValue: true,
+                fontSize: 13,
+                textMargin: 6,
+                margin: 0,
+                lineColor: "#000000",
+                background: "#ffffff",
+            });
+        } catch (erro) {
+            console.error("Erro ao gerar código de barras:", erro);
+        }
+    }, [pedido?.pedidoId]);
+
     if (!pedido) return null;
 
     const formatarMoeda = (valor) =>
@@ -96,6 +123,19 @@ function Comprovante({ pedido }) {
             </div>
 
             <div className="comprovante-linha" />
+
+            {/* Código de barras para controle do pedido */}
+            <div className="comprovante-codigo-barras">
+
+                <svg
+                    ref={codigoBarrasRef}
+                    role="img"
+                    aria-label={`Código de barras do pedido ${pedido.pedidoId}`}
+                />
+            </div>
+
+            <div className="comprovante-linha" />
+
 
             <footer className="comprovante-rodape">
                 <p>Aguarde a preparação do seu pedido.</p>

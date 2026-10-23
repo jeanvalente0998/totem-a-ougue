@@ -426,54 +426,554 @@
 }
 
 
-/* ===== NOTIFICAÇÃO DE NOVOS PEDIDOS ===== */
+
+/* ===== NOTIFICAÇÃO VISUAL MINIMALISTA ===== */
 
 .alerta-novo-pedido {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 16px;
 
-  padding: 18px 22px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 18px 20px;
   margin-bottom: 20px;
 
-  background: #fff3cd;
-  border: 2px solid #f59e0b;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #a71930;
   border-radius: 12px;
 
-  color: #856404;
-  animation: entrada-alerta 0.4s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+
+  animation: entrada-alerta 0.35s ease;
 }
 
-.alerta-novo-pedido strong {
-  font-size: 18px;
+/* Ícone */
+
+.alerta-pedido-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  background: #fce8ec;
+  color: #a71930;
+  border-radius: 12px;
 }
 
-.alerta-novo-pedido p {
-  margin: 6px 0 0;
-  font-size: 14px;
+/* Conteúdo */
+
+.alerta-pedido-conteudo {
+  flex: 1;
+  min-width: 0;
 }
 
-.alerta-novo-pedido button {
-  padding: 10px 16px;
+.alerta-pedido-titulo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.alerta-pedido-titulo strong {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Etiqueta NOVO */
+
+.alerta-pedido-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+
+  background: #dcfce7;
+  color: #166534;
+
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Descrição */
+
+.alerta-pedido-conteudo p {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Senhas */
+
+.alerta-pedido-senhas {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alerta-pedido-senhas>span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.alerta-pedido-senha {
+  padding: 5px 10px;
+  border-radius: 6px;
+
+  background: #f3f4f6;
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Botão fechar */
+
+.alerta-pedido-fechar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+
   border: none;
   border-radius: 8px;
 
-  background: #a71930;
-  color: #fff;
+  background: transparent;
+  color: #9ca3af;
 
-  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
   cursor: pointer;
+
+  transition: background 0.2s, color 0.2s;
 }
+
+.alerta-pedido-fechar:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.alerta-pedido-fechar:focus-visible {
+  outline: 2px solid #a71930;
+  outline-offset: 2px;
+}
+
+/* Animação suave */
 
 @keyframes entrada-alerta {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Responsividade */
+
+@media (max-width: 480px) {
+  .alerta-novo-pedido {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .alerta-pedido-icone {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+
+
+/* ===== CONTROLE DE NOTIFICAÇÕES SONORAS ===== */
+
+.controle-som {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  margin: 12px 0 24px;
+  padding: 16px 20px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.controle-som-informacoes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controle-som-informacoes strong {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.controle-som-informacoes span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Botão minimalista */
+
+.botao-controle-som {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 30px;
+
+  background: #f9fafb;
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.botao-controle-som:hover {
+  background: #f3f4f6;
+}
+
+.botao-controle-som:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.controle-som-icone {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.som-ativo .controle-som-icone {
+  color: #166534;
+}
+
+.som-inativo .controle-som-icone {
+  color: #9ca3af;
+}
+
+/* Switch deslizante */
+
+.controle-som-switch {
+  display: flex;
+  align-items: center;
+
+  width: 34px;
+  height: 20px;
+  padding: 3px;
+
+  background: #9ca3af;
+  border-radius: 20px;
+  box-sizing: border-box;
+
+  transition: background 0.2s ease;
+}
+
+.controle-som-switch-bola {
+  width: 14px;
+  height: 14px;
+
+  background: #ffffff;
+  border-radius: 50%;
+
+  transition: transform 0.2s ease;
+}
+
+.som-ativo .controle-som-switch {
+  background: #166534;
+}
+
+.som-ativo .controle-som-switch-bola {
+  transform: translateX(14px);
+}
+
+@media (max-width: 480px) {
+  .controle-som {
+    flex-wrap: wrap;
+  }
+}
+
+
+/* ===== DESTAQUE DE PEDIDOS NOVOS ===== */
+
+.card-pedido.card-pedido-novo {
+  border: 2px solid #a71930;
+  box-shadow: 0 4px 16px rgba(167, 25, 48, 0.10);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-pedido-etiqueta-novo {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  padding: 4px 9px;
+  border-radius: 6px;
+
+  background: #fce8ec;
+  color: #a71930;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.card-pedido-cabecalho {
+  position: relative;
+}
+
+/* Reserva espaço para a etiqueta sem cobrir o status */
+.card-pedido.card-pedido-novo .card-pedido-cabecalho {
+  padding-top: 28px;
+}
+
+
+/* ===== LEITOR DE CÓDIGOS DE BARRAS ===== */
+
+.leitor-pedidos {
+  padding: 20px;
+  margin: 16px 0 24px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.leitor-pedidos-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.leitor-pedidos-cabecalho strong {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.leitor-pedidos-cabecalho p {
+  margin: 1px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+  align-items: center;
+}
+
+.leitor-pedidos-indicador {
+  color: #166534;
+  background: #f0fdf4;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.leitor-pedidos-formulario {
+  display: flex;
+  gap: 10px;
+}
+
+.leitor-pedidos-formulario input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+
+  background: #f9fafb;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.leitor-pedidos-formulario input:focus {
+  border-color: #a71930;
+  background: #ffffff;
+}
+
+.leitor-pedidos-formulario button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+
+  background: #a71930;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.leitor-pedidos-formulario button:hover {
+  background: #8e1529;
+}
+
+.leitor-pedidos-resultado {
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.leitura-sucesso {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.leitura-erro {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+@media (max-width: 600px) {
+  .leitor-pedidos-cabecalho {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .leitor-pedidos-formulario {
+    flex-direction: column;
+  }
+}
+
+
+/* ===== PAINEL DE LEITURA AUTOMÁTICA ===== */
+
+.leitor-pedido-identificado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    padding: 10px 20px;
+    margin-top: 10px;
+
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.leitor-senha-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #166534;
+}
+
+.leitor-senha-numero {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    color: #14532d;
+    font-variant-numeric: tabular-nums;
+}
+
+.leitor-pedido-numero {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.leitor-pedido-status {
+    margin-top: 3px;
+    padding: 4px 12px;
+
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* ===== CORES DO PAINEL CONFORME O STATUS ===== */
+
+/* Pedido em preparação: azul */
+.leitor-pedido-identificado.painel-em-preparacao {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.painel-em-preparacao .leitor-senha-label {
+    color: #1d4ed8;
+}
+
+.painel-em-preparacao .leitor-senha-numero {
+    color: #1e40af;
+}
+
+.painel-em-preparacao .leitor-pedido-status {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Pedido pronto para retirada: verde */
+.leitor-pedido-identificado.painel-pronto-retirada {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.painel-pronto-retirada .leitor-senha-label {
+    color: #166534;
+}
+
+.painel-pronto-retirada .leitor-senha-numero {
+    color: #14532d;
+}
+
+.painel-pronto-retirada .leitor-pedido-status {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* ===== NOTIFICAÇÃO COMPACTA DE NOVOS PEDIDOS ===== */
+
+.alerta-novo-pedido {
+    padding: 12px 16px;
+}
+
+.alerta-pedido-conteudo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.alerta-pedido-titulo {
+    margin: 0;
+}
+
+.alerta-pedido-senhas {
+    margin: 0;
+    gap: 8px;
 }

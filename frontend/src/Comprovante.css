@@ -396,4 +396,42 @@
 }
 
 
+/* ===== CÓDIGO DE BARRAS DO COMPROVANTE ===== */
+
+@media print {
+
+    .comprovante-codigo-barras {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+
+        width: 100% !important;
+        margin: 10px 0 !important;
+        padding: 4px 0 !important;
+
+        text-align: center !important;
+        break-inside: avoid !important;
+    }
+
+    .comprovante-codigo-barras p {
+        margin: 0 0 8px !important;
+
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+    }
+
+    .comprovante-codigo-barras svg {
+        display: block !important;
+
+        width: auto !important;
+        max-width: 100% !important;
+        height: auto !important;
+
+        margin: 0 auto !important;
+        overflow: visible !important;
+    }
+}
+
 

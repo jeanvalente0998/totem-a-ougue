@@ -1,0 +1,332 @@
+
+.pagina-painel-cliente {
+    min-height: 100vh;
+    padding: 28px;
+    background: #f5f6f8;
+    font-family: Arial, sans-serif;
+}
+
+.painel-cliente-cabecalho {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.painel-cliente-cabecalho h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    color: #111827;
+}
+
+.painel-cliente-cabecalho p {
+    margin: 0;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.painel-cliente-kanban {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.painel-cliente-coluna {
+    padding: 16px;
+    border-radius: 14px;
+    min-width: 0;
+}
+
+.painel-cliente-coluna.coluna-aguardando {
+    background: #fff8e5;
+}
+
+.painel-cliente-coluna.coluna-preparacao {
+    background: #eff6ff;
+}
+
+.painel-cliente-coluna.coluna-prontos {
+    background: #effcf3;
+}
+
+.painel-cliente-coluna h2 {
+    margin: 0;
+    text-align: center;
+    font-size: 22px;
+    color: #111827;
+}
+
+.painel-cliente-contador {
+    margin: 14px 0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.painel-cliente-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.painel-cliente-card {
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.painel-cliente-card-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.painel-cliente-label {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.painel-cliente-senha {
+    display: block;
+    margin: 8px 0;
+    font-size: 42px;
+    line-height: 1;
+    color: #111827;
+}
+
+.painel-cliente-pedido {
+    display: block;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.painel-cliente-status {
+    padding: 10px 12px;
+    border-radius: 22px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.painel-cliente-status.status-aguardando {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.painel-cliente-status.status-preparacao {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.painel-cliente-status.status-prontos {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.painel-cliente-vazio {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.painel-cliente-erro {
+    color: #b91c1c;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 850px) {
+    .painel-cliente-kanban {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ===== PAINEL PARA TV HORIZONTAL ===== */
+
+.pagina-painel-cliente {
+    min-height: 100vh;
+    padding: 20px 28px;
+    box-sizing: border-box;
+}
+
+.painel-cliente-cabecalho {
+    margin-bottom: 20px;
+}
+
+.painel-cliente-cabecalho h1 {
+    font-size: clamp(28px, 2.5vw, 42px);
+    font-weight: 800;
+}
+
+.painel-cliente-cabecalho p {
+    font-size: 16px;
+}
+
+.painel-cliente-kanban {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+.painel-cliente-coluna {
+    padding: 16px;
+    min-height: calc(100vh - 200px);
+    box-sizing: border-box;
+}
+
+.painel-cliente-coluna h2 {
+    font-size: clamp(18px, 1.6vw, 26px);
+    font-weight: 700;
+}
+
+.painel-cliente-contador {
+    margin: 8px 0 14px;
+    font-size: 16px;
+}
+
+.painel-cliente-lista {
+    gap: 10px;
+}
+
+.painel-cliente-card {
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.painel-cliente-card-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.painel-cliente-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+}
+
+.painel-cliente-senha {
+    margin: 0;
+    font-size: clamp(44px, 4vw, 68px);
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Destaque maior para os pedidos prontos */
+.coluna-prontos .painel-cliente-senha {
+    color: #166534;
+}
+
+/* Mantém as três colunas em TVs horizontais */
+@media (min-width: 1000px) {
+    .painel-cliente-kanban {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+/* ===== CABEÇALHO COM IDENTIDADE VISUAL COMPREMIX ===== */
+
+.painel-cliente-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    background: #d20f1b;
+    padding: 22px 40px;
+    margin-bottom: 24px;
+
+    border-radius: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    text-align: left;
+}
+
+.painel-cliente-cabecalho-texto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.painel-cliente-cabecalho h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(28px, 3vw, 48px);
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.painel-cliente-cabecalho h1 span {
+    display: block;
+}
+
+.painel-cliente-cabecalho p {
+    margin: 10px 0 0;
+    color: #ffffff;
+    font-size: clamp(13px, 1.2vw, 17px);
+    font-weight: 400;
+}
+
+.painel-cliente-marca {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.painel-cliente-logo {
+    display: block;
+    width: clamp(150px, 17vw, 260px);
+    max-height: 110px;
+    object-fit: contain;
+}
+
+/* Ajustes para telas menores */
+@media (max-width: 700px) {
+    .painel-cliente-cabecalho {
+        padding: 18px;
+        gap: 12px;
+    }
+
+    .painel-cliente-cabecalho h1 {
+        font-size: 24px;
+    }
+
+    .painel-cliente-logo {
+        width: 120px;
+    }
+}
+
+
+/* ===== CABEÇALHO ARREDONDADO - PAINEL CLIENTE ===== */
+
+.painel-cliente-cabecalho {
+    border-radius: 18px;
+
+    /* Contorno de destaque */
+    border-top: 6px solid #a80f1c;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+
+    /* Mantém a identidade visual CompreMix */
+    background: #d20f1b;
+
+    /* Sombra para destacar o cabeçalho */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+
+    /* Espaçamento interno */
+    padding: 22px 36px;
+
+    /* Evita que elementos ultrapassem os cantos */
+    overflow: hidden;
+}
+
+

@@ -8,7 +8,19 @@ const {
     consultarClientePorCpf,
 } = require("./database/oracle");
 
-const { atualizarStatusPedido } = require("./database/pedidos");
+const {
+    atualizarStatusPedido,
+    avancarPedidoPorScanner,
+} = require("./database/pedidos");
+
+
+// Proteção inicial contra leituras duplicadas.
+// Adequada para testes com uma única instância do Node.js.
+const intervaloSegurancaScanner = 60000;
+
+const ultimasLeiturasScanner = new Map();
+const pedidosScannerEmProcessamento = new Set();
+
 
 // Colunas que representam os tipos de corte no Oracle.
 const CAMPOS_CORTES = [
@@ -309,7 +321,7 @@ router.post("/", async (req, res) => {
                 idPedido,
                 codcli: cliente.CODCLI,
                 senha,
-                status: "AGUARDANDO_SEPARACAO",
+                status: "AGUARDANDO_PREPARACAO",
                 valorTotal,
             }
         );
@@ -366,7 +378,7 @@ router.post("/", async (req, res) => {
                 nomeCliente: cliente.CLIENTE,
                 itens: itensCalculados,
                 valorTotal,
-                status: "AGUARDANDO_SEPARACAO",
+                status: "AGUARDANDO_PREPARACAO",
             },
         });
 
@@ -399,6 +411,117 @@ router.post("/", async (req, res) => {
     }
 });
 
+
+/**
+ * Recebe o código de barras e avança o pedido
+ * automaticamente para a próxima etapa.
+ */
+router.post("/scan", async (req, res) => {
+    let idPedido;
+    let bloqueioAdquirido = false;
+
+    try {
+        const { codigo } = req.body ?? {};
+
+        if (typeof codigo !== "string") {
+            return res.status(400).json({
+                mensagem: "Código de barras inválido.",
+            });
+        }
+
+        const correspondencia =
+            /^PED-([1-9]\d*)$/.exec(codigo.trim().toUpperCase());
+
+        if (!correspondencia) {
+            return res.status(400).json({
+                mensagem: "Formato de código de barras inválido.",
+            });
+        }
+
+        idPedido = Number(correspondencia[1]);
+
+        if (!Number.isSafeInteger(idPedido)) {
+            return res.status(400).json({
+                mensagem: "Identificador do pedido inválido.",
+            });
+        }
+
+        const agora = Date.now();
+        const ultimaLeitura =
+            ultimasLeiturasScanner.get(idPedido) ?? 0;
+
+        // Impede leituras repetidas em intervalo curto.
+        if (agora - ultimaLeitura < intervaloSegurancaScanner) {
+            return res.status(409).json({
+                mensagem:
+                    "Leitura repetida. Aguarde antes de escanear novamente.",
+                pedidoId: idPedido,
+            });
+        }
+
+        // Impede duas requisições simultâneas neste processo.
+        if (pedidosScannerEmProcessamento.has(idPedido)) {
+            return res.status(409).json({
+                mensagem: "Este pedido já está sendo processado.",
+                pedidoId: idPedido,
+            });
+        }
+
+        pedidosScannerEmProcessamento.add(idPedido);
+        bloqueioAdquirido = true;
+
+        // Verifica novamente após adquirir o bloqueio.
+        const ultimaLeituraConfirmada =
+            ultimasLeiturasScanner.get(idPedido) ?? 0;
+
+        if (
+            Date.now() - ultimaLeituraConfirmada <
+            intervaloSegurancaScanner
+        ) {
+            return res.status(409).json({
+                mensagem: "Leitura repetida. Aguarde para tentar novamente.",
+                pedidoId: idPedido,
+            });
+        }
+
+        const resultado = await avancarPedidoPorScanner(idPedido);
+
+        if (resultado.resultado === "NAO_ENCONTRADO") {
+            return res.status(404).json({
+                mensagem: "Pedido não encontrado.",
+            });
+        }
+
+        if (resultado.resultado === "SEM_TRANSICAO") {
+            return res.status(409).json({
+                mensagem: "O pedido não possui uma próxima etapa disponível.",
+                pedidoId: idPedido,
+                status: resultado.statusAnterior,
+            });
+        }
+
+        ultimasLeiturasScanner.set(idPedido, Date.now());
+
+        return res.status(200).json({
+            mensagem: "Status atualizado pelo scanner com sucesso.",
+            pedidoId: idPedido,
+            statusAnterior: resultado.statusAnterior,
+            status: resultado.novoStatus,
+        });
+
+    } catch (erro) {
+        console.error("Erro ao processar leitura do scanner:", erro);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível processar o código de barras.",
+        });
+
+    } finally {
+        if (bloqueioAdquirido) {
+            pedidosScannerEmProcessamento.delete(idPedido);
+        }
+    }
+});
 
 // Atualiza o status de preparação de um pedido.
 router.patch("/:id/status", async (req, res) => {

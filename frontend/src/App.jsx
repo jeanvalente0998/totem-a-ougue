@@ -4,22 +4,37 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Produtos from "./Produtos";
 import Gerenciamento from "./Gerenciamento";
+import PainelCliente from "./PainelCliente";
 import "./App.css";
+
 
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<TelaInicial />} />
+        {/* Tela 1 - Totem de autoatendimento */}
+        <Route
+          path="/"
+          element={<TelaInicial />}
+        />
+
+        {/* Tela 2 - Gerenciamento dos pedidos */}
         <Route
           path="/gerenciamento"
           element={<Gerenciamento />}
+        />
+
+        {/* Tela 3 - Acompanhamento para clientes */}
+        <Route
+          path="/painel-cliente"
+          element={<PainelCliente />}
         />
       </Routes>
     </BrowserRouter>
   );
 }
+
 
 function TelaInicial() {
   const [cpf, setCpf] = useState("");
