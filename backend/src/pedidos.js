@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
                 A.DESCRICAO,
                 E.UNIDADE,
                 
-                E.PVENDA,
+                COALESCE(PROMO.VLOFERTA, E.PVENDA) AS PVENDA,
                 (
                     F.QTESTGER
                     - F.QTBLOQUEADA
@@ -147,6 +147,49 @@ router.post("/", async (req, res) => {
             JOIN HOMOLOGA.PCEMBALAGEM E
                 ON E.CODPROD = A.CODPROD
                AND E.CODFILIAL = '61'
+            -- Consulta as ofertas programadas vigentes no WinThor.
+            LEFT JOIN (
+                SELECT
+                    OFERTAS.CODPROD,
+                    OFERTAS.VLOFERTA
+                FROM (
+                    SELECT
+                        I.CODPROD,
+                        I.VLOFERTA,
+
+                        ROW_NUMBER() OVER (
+                            PARTITION BY I.CODPROD
+                            ORDER BY
+                                C.PRIORIDADEOFERTA DESC NULLS LAST,
+                                C.DTINICIAL DESC,
+                                C.CODOFERTA DESC,
+                                I.CODITEM DESC
+                        ) AS RN
+
+                    FROM HOMOLOGA.PCOFERTAPROGRAMADAC C
+
+                    INNER JOIN HOMOLOGA.PCOFERTAPROGRAMADAI I
+                        ON I.CODOFERTA = C.CODOFERTA
+                    AND I.CODFILIAL = C.CODFILIAL
+
+                    WHERE C.CODFILIAL = '61'
+
+                    -- Verifica o período de vigência.
+                    AND TRUNC(SYSDATE) BETWEEN TRUNC(C.DTINICIAL)
+                                            AND TRUNC(C.DTFINAL)
+
+                    -- Desconsidera ofertas canceladas.
+                    AND C.DTCANCEL IS NULL
+
+                    -- Desconsidera itens excluídos.
+                    AND I.DATAEXCLUSAO IS NULL
+
+                    -- Considera somente preços positivos.
+                    AND I.VLOFERTA > 0
+                ) OFERTAS
+                WHERE OFERTAS.RN = 1
+            ) PROMO
+                ON PROMO.CODPROD = A.CODPROD
             WHERE A.CODPROD IN (${parametrosIN})
               AND A.CODEPTO = 12
               AND A.DTEXCLUSAO IS NULL

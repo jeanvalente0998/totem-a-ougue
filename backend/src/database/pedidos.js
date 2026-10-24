@@ -30,6 +30,14 @@ async function consultarPedidos() {
                 ON I.ID_PEDIDO = P.ID_PEDIDO
             WHERE P.DATA_PEDIDO >= TRUNC(SYSDATE)
             AND P.DATA_PEDIDO < TRUNC(SYSDATE) + 1
+            -- Pedidos prontos desaparecem após 15 minutos.
+            AND (
+                P.STATUS <> 'PRONTO_RETIRADA'
+                OR (
+                    P.DATA_PRONTO IS NOT NULL
+                    AND P.DATA_PRONTO > LOCALTIMESTAMP - INTERVAL '15' MINUTE
+                )
+            )
             ORDER BY
                 P.DATA_PEDIDO DESC,
                 P.ID_PEDIDO DESC,
@@ -73,9 +81,16 @@ async function atualizarStatusPedido(idPedido, novoStatus) {
 
         const sql = `
             UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
-            SET STATUS = :novoStatus
+            SET
+                STATUS = :novoStatus,
+                -- Registra o horário quando o pedido fica pronto.
+                DATA_PRONTO = CASE
+                    WHEN :novoStatus = 'PRONTO_RETIRADA'
+                    THEN LOCALTIMESTAMP
+                    ELSE DATA_PRONTO
+                END
             WHERE ID_PEDIDO = :idPedido
-              AND STATUS = :statusAnterior
+            AND STATUS = :statusAnterior
         `;
 
         const resultado = await conexao.execute(
@@ -159,9 +174,16 @@ async function avancarPedidoPorScanner(idPedido) {
 
         await conexao.execute(
             `UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
-             SET STATUS = :novoStatus
-             WHERE ID_PEDIDO = :idPedido
-               AND STATUS = :statusAnterior`,
+            SET
+                STATUS = :novoStatus,
+                -- Registra o horário ao finalizar pelo scanner.
+                DATA_PRONTO = CASE
+                    WHEN :novoStatus = 'PRONTO_RETIRADA'
+                    THEN LOCALTIMESTAMP
+                    ELSE DATA_PRONTO
+                END
+            WHERE ID_PEDIDO = :idPedido
+            AND STATUS = :statusAnterior`,
             {
                 novoStatus,
                 idPedido,

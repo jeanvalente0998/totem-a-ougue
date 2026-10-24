@@ -4,13 +4,13 @@ const oracledb = require("oracledb");
 
 // Consulta os produtos disponíveis para o totem.
 async function consultarProdutos() {
-    let conexao;
+  let conexao;
 
-    try {
-        // Abre a conexão com o Oracle.
-        conexao = await obterConexao();
+  try {
+    // Abre a conexão com o Oracle.
+    conexao = await obterConexao();
 
-        const sql = `
+    const sql = `
       SELECT
         A.CODPROD,
         A.DESCRICAO,
@@ -24,7 +24,7 @@ async function consultarProdutos() {
           - F.QTRESERV
         ) AS EST_LIQUIDO,
         
-        E.PVENDA,
+        COALESCE(PROMO.VLOFERTA, E.PVENDA) AS PVENDA,
 
         -- Tipos de corte disponíveis para o produto.
         C.BIFE,
@@ -61,6 +61,51 @@ async function consultarProdutos() {
         ON E.CODPROD = A.CODPROD
        AND E.CODFILIAL = '61'
 
+      -- Busca uma oferta programada vigente por produto.
+      LEFT JOIN (
+          SELECT
+              OFERTAS.CODPROD,
+              OFERTAS.VLOFERTA
+          FROM (
+              SELECT
+                  I.CODPROD,
+                  I.VLOFERTA,
+
+                  ROW_NUMBER() OVER (
+                      PARTITION BY I.CODPROD
+                      ORDER BY
+                          C.PRIORIDADEOFERTA DESC NULLS LAST,
+                          C.DTINICIAL DESC,
+                          C.CODOFERTA DESC,
+                          I.CODITEM DESC
+                  ) AS RN
+
+              FROM HOMOLOGA.PCOFERTAPROGRAMADAC C
+
+              INNER JOIN HOMOLOGA.PCOFERTAPROGRAMADAI I
+                  ON I.CODOFERTA = C.CODOFERTA
+                AND I.CODFILIAL = C.CODFILIAL
+
+              WHERE C.CODFILIAL = '61'
+
+                -- Oferta dentro do período de vigência.
+                AND TRUNC(SYSDATE) BETWEEN TRUNC(C.DTINICIAL)
+                                      AND TRUNC(C.DTFINAL)
+
+                -- Oferta não cancelada.
+                AND C.DTCANCEL IS NULL
+
+                -- Produto não excluído da oferta.
+                AND I.DATAEXCLUSAO IS NULL
+
+                -- Preço promocional válido.
+                AND I.VLOFERTA > 0
+          ) OFERTAS
+
+          WHERE OFERTAS.RN = 1
+      ) PROMO
+          ON PROMO.CODPROD = A.CODPROD
+
       WHERE A.CODEPTO = 12
         AND A.DTEXCLUSAO IS NULL
 
@@ -86,20 +131,20 @@ async function consultarProdutos() {
       ORDER BY A.DESCRICAO
     `;
 
-        // Executa a consulta e retorna cada linha como um objeto.
-        const resultado = await conexao.execute(
-            sql,
-            [],
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
+    // Executa a consulta e retorna cada linha como um objeto.
+    const resultado = await conexao.execute(
+      sql,
+      [],
+      { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
 
-        return resultado.rows;
-    } finally {
-        // Fecha a conexão mesmo se ocorrer algum erro.
-        if (conexao) {
-            await conexao.close();
-        }
+    return resultado.rows;
+  } finally {
+    // Fecha a conexão mesmo se ocorrer algum erro.
+    if (conexao) {
+      await conexao.close();
     }
+  }
 }
 
 module.exports = { consultarProdutos };
