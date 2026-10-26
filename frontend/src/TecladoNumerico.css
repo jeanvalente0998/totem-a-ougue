@@ -1,0 +1,84 @@
+
+.teclado-numerico {
+  width: 100%;
+  max-width: 420px;
+  margin: 18px auto;
+  padding: 18px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.teclado-numerico-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.teclado-fechar {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.teclado-numerico-grade {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tecla-numero,
+.tecla-acao {
+  min-height: 65px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tecla-numero {
+  background: #f1f3f5;
+  color: #111827;
+}
+
+.tecla-numero:active {
+  background: #d1d5db;
+}
+
+.tecla-acao {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 17px;
+}
+
+.teclado-confirmar {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #d20f1b;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.teclado-confirmar:active {
+  background: #a80f1c;
+}

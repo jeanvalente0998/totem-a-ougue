@@ -58,6 +58,7 @@ function identificarCategoria(nome) {
         texto.includes("ACEM") ||
         texto.includes("ACÉM") ||
         texto.includes("CUPIM") ||
+        texto.includes("PONTA DE PEITO") ||
         texto.includes("CARNE")
     ) return "Bovina";
 

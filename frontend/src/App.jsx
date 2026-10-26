@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Produtos from "./Produtos";
 import Gerenciamento from "./Gerenciamento";
 import PainelCliente from "./PainelCliente";
+import TecladoNumerico from "./TecladoNumerico";
 import "./App.css";
 
 
@@ -41,6 +42,9 @@ function TelaInicial() {
   const [mensagem, setMensagem] = useState("");
   const [cliente, setCliente] = useState(null);
   const [carregando, setCarregando] = useState(false);
+  // CONFIGURAÇÃO DO TECLADO VIRTUAL
+  const TECLADO_VIRTUAL_ATIVO = true;
+  const [tecladoAberto, setTecladoAberto] = useState(false);
 
   if (cliente) {
     return <Produtos cliente={cliente} />;
@@ -54,6 +58,21 @@ function TelaInicial() {
     setCpf(apenasNumeros);
     setMensagem("");
     setCliente(null);
+  }
+
+  function adicionarNumero(numero) {
+    setCpf((cpfAtual) => (cpfAtual + numero).slice(0, 11));
+    setMensagem("");
+  }
+
+  function apagarNumero() {
+    setCpf((cpfAtual) => cpfAtual.slice(0, -1));
+    setMensagem("");
+  }
+
+  function limparCpf() {
+    setCpf("");
+    setMensagem("");
   }
 
   async function handleSubmit(event) {
@@ -70,7 +89,7 @@ function TelaInicial() {
 
     try {
       const resposta = await fetch(
-        "http:/api/clientes/validar-cpf",
+        "/api/clientes/validar-cpf",
         {
           method: "POST",
           headers: {
@@ -133,7 +152,7 @@ function TelaInicial() {
             Informe seu CPF para começar seu pedido.
           </p>
 
-          <form onSubmit={handleSubmit}>
+          <form id="form-cpf" onSubmit={handleSubmit}>
             <label htmlFor="cpf">
               Digite somente os números do seu CPF
             </label>
@@ -141,16 +160,34 @@ function TelaInicial() {
             <input
               id="cpf"
               type="text"
-              inputMode="numeric"
+              inputMode={TECLADO_VIRTUAL_ATIVO ? "none" : "numeric"}
               placeholder="00000000000"
               value={cpf}
               onChange={handleCpfChange}
+              onFocus={() => {
+                if (TECLADO_VIRTUAL_ATIVO) {
+                  setTecladoAberto(true);
+                }
+              }}
               maxLength={11}
               autoComplete="off"
               required
               disabled={carregando || Boolean(cliente)}
               aria-describedby="ajuda-cpf"
             />
+
+            {TECLADO_VIRTUAL_ATIVO && tecladoAberto && !carregando && (
+              <TecladoNumerico
+                onNumero={adicionarNumero}
+                onApagar={apagarNumero}
+                onLimpar={limparCpf}
+                onFechar={() => setTecladoAberto(false)}
+                onConfirmar={() => {
+                  setTecladoAberto(false);
+                  document.getElementById("form-cpf")?.requestSubmit();
+                }}
+              />
+            )}
 
             <p id="ajuda-cpf" className="ajuda">
               Para realizar seu pedido é necessário ser cadastrado no Clube de Vantagens.
