@@ -44,10 +44,20 @@ function TelaInicial() {
   const [carregando, setCarregando] = useState(false);
   // CONFIGURAÇÃO DO TECLADO VIRTUAL
   const TECLADO_VIRTUAL_ATIVO = true;
-  const [tecladoAberto, setTecladoAberto] = useState(false);
+  const [tecladoAberto, setTecladoAberto] = useState(true);
 
   if (cliente) {
-    return <Produtos cliente={cliente} />;
+    return (
+      <Produtos
+        cliente={cliente}
+        onConcluirAtendimento={() => {
+          setCliente(null);
+          setCpf("");
+          setMensagem("");
+          setTecladoAberto(true);
+        }}
+      />
+    );
   }
 
   function handleCpfChange(event) {
@@ -115,6 +125,8 @@ function TelaInicial() {
           ...dados.cliente,
           cpf: cpf.replace(/\D/g, ""),
         });
+      } else {
+        setTecladoAberto(true);
       }
     } catch {
       setMensagem(
@@ -181,9 +193,7 @@ function TelaInicial() {
                 onNumero={adicionarNumero}
                 onApagar={apagarNumero}
                 onLimpar={limparCpf}
-                onFechar={() => setTecladoAberto(false)}
                 onConfirmar={() => {
-                  setTecladoAberto(false);
                   document.getElementById("form-cpf")?.requestSubmit();
                 }}
               />
@@ -193,14 +203,6 @@ function TelaInicial() {
               Para realizar seu pedido é necessário ser cadastrado no Clube de Vantagens.
             </p>
 
-            <button
-              className="botao-continuar"
-              type="submit"
-              disabled={carregando || Boolean(cliente)}
-            >
-              {carregando ? "Consultando cadastro..." : "Continuar"}
-              {!carregando && <span aria-hidden="true"> →</span>}
-            </button>
           </form>
 
           {mensagem && (

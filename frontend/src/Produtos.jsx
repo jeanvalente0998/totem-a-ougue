@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Produtos.css";
 import Comprovante from "./Comprovante";
 
@@ -11,8 +12,7 @@ const categorias = [
     "Peixes",
     "Linguiças",
     "Temperados",
-    "Ofertas",
-    "Buscar",
+    "Outros",
 ];
 
 function identificarCategoria(nome) {
@@ -62,7 +62,7 @@ function identificarCategoria(nome) {
         texto.includes("CARNE")
     ) return "Bovina";
 
-    return "Ofertas";
+    return "Outros";
 }
 
 
@@ -99,12 +99,11 @@ function identificarCortes(produto) {
 }
 
 
-function Produtos({ cliente }) {
+function Produtos({ cliente, onConcluirAtendimento }) {
     const [produtos, setProdutos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erroProdutos, setErroProdutos] = useState("");
     const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
-    const [busca, setBusca] = useState("");
     const [carrinho, setCarrinho] = useState([]);
     const [ultimoProdutoClicado, setUltimoProdutoClicado] = useState(null);
     const [modalConfirmacaoAberto, setModalConfirmacaoAberto] =
@@ -120,6 +119,17 @@ function Produtos({ cliente }) {
 
     const [comprovante, setComprovante] = useState(null);
     const ultimoPedidoImpresso = useRef(null);
+
+    function concluirAtendimento() {
+        setModalSucesso({
+            aberta: false,
+            senha: "",
+        });
+
+        if (onConcluirAtendimento) {
+            onConcluirAtendimento();
+        }
+    }
 
     useEffect(() => {
         async function carregarProdutos() {
@@ -199,20 +209,15 @@ function Produtos({ cliente }) {
             maximumFractionDigits: 3,
         }) + " kg";
 
+
     const produtosFiltrados = useMemo(() => {
         return produtos.filter((produto) => {
-            const correspondeCategoria =
+            return (
                 categoriaAtiva === "Todos" ||
-                categoriaAtiva === "Buscar" ||
-                produto.categoria === categoriaAtiva;
-
-            const correspondeBusca = produto.nome
-                .toLowerCase()
-                .includes(busca.toLowerCase().trim());
-
-            return correspondeCategoria && correspondeBusca;
+                produto.categoria === categoriaAtiva
+            );
         });
-    }, [produtos, categoriaAtiva, busca]);
+    }, [produtos, categoriaAtiva]);
 
     function adicionarProduto(produto) {
         setUltimoProdutoClicado(produto.id);
@@ -444,45 +449,33 @@ function Produtos({ cliente }) {
             </header>
 
             <div className="area-compras">
+
                 <aside className="menu-categorias">
                     {categorias.map((categoria) => (
                         <button
                             key={categoria}
+                            type="button"
                             className={`botao-categoria ${categoriaAtiva === categoria ? "ativa" : ""
                                 }`}
                             onClick={() => {
                                 setCategoriaAtiva(categoria);
-                                setBusca("");
                             }}
                         >
                             <span>
                                 {categoria === "Todos"
                                     ? "Todos os produtos"
-                                    : categoria === "Buscar"
-                                        ? "Buscar produto"
-                                        : categoria}
+                                    : categoria}
                             </span>
+
                             <span aria-hidden="true">›</span>
                         </button>
                     ))}
-
-                    {categoriaAtiva === "Buscar" && (
-                        <input
-                            className="campo-busca"
-                            placeholder="Nome do produto"
-                            value={busca}
-                            onChange={(event) => setBusca(event.target.value)}
-                        />
-                    )}
                 </aside>
 
                 <section className="area-catalogo">
+
                     <div className="titulo-catalogo">
-                        <h2>
-                            {categoriaAtiva === "Buscar"
-                                ? "Buscar produtos"
-                                : categoriaAtiva}
-                        </h2>
+                        <h2>{categoriaAtiva}</h2>
                         <span>{produtosFiltrados.length} produtos</span>
                     </div>
 
@@ -687,6 +680,7 @@ function Produtos({ cliente }) {
                                     </strong>
 
                                     <button
+                                        type="button"
                                         className="botao-remover"
                                         onClick={() =>
                                             setCarrinho((atual) =>
@@ -700,31 +694,72 @@ function Produtos({ cliente }) {
                                         ×
                                     </button>
 
-                                    <button
-                                        className="botao-ajuste"
-                                        onClick={() =>
-                                            alterarQuantidade(
-                                                item.id,
-                                                item.unidade === "kg" ? -100 : -1
-                                            )
-                                        }
-                                        aria-label={`Diminuir ${item.nome}`}
-                                    >
-                                        −
-                                    </button>
+                                    {/* Controles de quantidade e peso */}
+                                    <div className="controles-peso-carrinho">
 
-                                    <button
-                                        className="botao-ajuste"
-                                        onClick={() =>
-                                            alterarQuantidade(
-                                                item.id,
-                                                item.unidade === "kg" ? 100 : 1
-                                            )
-                                        }
-                                        aria-label={`Aumentar ${item.nome}`}
-                                    >
-                                        +
-                                    </button>
+                                        {/* Botões de incremento rápido somente para KG */}
+                                        {item.unidade === "kg" && (
+                                            <div className="botoes-peso-rapido">
+
+                                                <button
+                                                    type="button"
+                                                    className="botao-peso-rapido"
+                                                    onClick={() =>
+                                                        alterarQuantidade(item.id, 500)
+                                                    }
+                                                    aria-label={`Adicionar 500 gramas de ${item.nome}`}
+                                                >
+                                                    + 500 g
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="botao-peso-rapido"
+                                                    onClick={() =>
+                                                        alterarQuantidade(item.id, 1000)
+                                                    }
+                                                    aria-label={`Adicionar 1 quilo de ${item.nome}`}
+                                                >
+                                                    + 1 kg
+                                                </button>
+
+                                            </div>
+                                        )}
+
+                                        {/* Botões originais de ajuste */}
+                                        <div className="botoes-ajuste-peso">
+
+                                            <button
+                                                type="button"
+                                                className="botao-ajuste"
+                                                onClick={() =>
+                                                    alterarQuantidade(
+                                                        item.id,
+                                                        item.unidade === "kg" ? -100 : -1
+                                                    )
+                                                }
+                                                aria-label={`Diminuir ${item.nome}`}
+                                            >
+                                                −
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="botao-ajuste"
+                                                onClick={() =>
+                                                    alterarQuantidade(
+                                                        item.id,
+                                                        item.unidade === "kg" ? 100 : 1
+                                                    )
+                                                }
+                                                aria-label={`Aumentar ${item.nome}`}
+                                            >
+                                                +
+                                            </button>
+
+                                        </div>
+
+                                    </div>
                                 </div>
                             );
                         })()
@@ -947,12 +982,7 @@ function Produtos({ cliente }) {
                         <div className="modal-acoes">
                             <button
                                 className="botao-confirmar"
-                                onClick={() =>
-                                    setModalSucesso({
-                                        aberta: false,
-                                        senha: "",
-                                    })
-                                }
+                                onClick={concluirAtendimento}
                             >
                                 Concluir
                             </button>

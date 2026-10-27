@@ -589,7 +589,9 @@ function Gerenciamento() {
                                 ? "painel-em-preparacao"
                                 : ultimoPedidoLido.status === "PRONTO_RETIRADA"
                                     ? "painel-pronto-retirada"
-                                    : ""
+                                    : ultimoPedidoLido.status === "RETIRADO_PELO_CLIENTE"
+                                        ? "painel-retirado-cliente"
+                                        : ""
                                 }`}
                             role="status"
                         >
@@ -612,7 +614,9 @@ function Gerenciamento() {
                                     ? "Em preparação"
                                     : ultimoPedidoLido.status === "PRONTO_RETIRADA"
                                         ? "Pronto para retirada"
-                                        : ultimoPedidoLido.status}
+                                        : ultimoPedidoLido.status === "RETIRADO_PELO_CLIENTE"
+                                            ? "Retirado pelo cliente"
+                                            : ultimoPedidoLido.status}
                             </span>
                         </div>
                     ) : resultadoLeitura ? (

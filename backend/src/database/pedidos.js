@@ -30,6 +30,14 @@ async function consultarPedidos() {
                 ON I.ID_PEDIDO = P.ID_PEDIDO
             WHERE P.DATA_PEDIDO >= TRUNC(SYSDATE)
             AND P.DATA_PEDIDO < TRUNC(SYSDATE) + 1
+
+            -- Pedidos retirados não aparecem nas telas.
+            AND P.STATUS IN (
+                'AGUARDANDO_PREPARACAO',
+                'EM_PREPARACAO',
+                'PRONTO_RETIRADA'
+            )
+
             -- Pedidos prontos desaparecem após 15 minutos.
             AND (
                 P.STATUS <> 'PRONTO_RETIRADA'
@@ -68,6 +76,7 @@ async function atualizarStatusPedido(idPedido, novoStatus) {
     const transicoesPermitidas = {
         EM_PREPARACAO: "AGUARDANDO_PREPARACAO",
         PRONTO_RETIRADA: "EM_PREPARACAO",
+        RETIRADO_PELO_CLIENTE: "PRONTO_RETIRADA",
     };
 
     const statusAnterior = transicoesPermitidas[novoStatus];
@@ -79,16 +88,26 @@ async function atualizarStatusPedido(idPedido, novoStatus) {
     try {
         conexao = await obterConexao();
 
+
         const sql = `
             UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
             SET
                 STATUS = :novoStatus,
-                -- Registra o horário quando o pedido fica pronto.
+
+                -- Registra quando o pedido ficou pronto.
                 DATA_PRONTO = CASE
                     WHEN :novoStatus = 'PRONTO_RETIRADA'
                     THEN LOCALTIMESTAMP
                     ELSE DATA_PRONTO
+                END,
+
+                -- Registra quando o pedido foi retirado.
+                DATA_RETIRADA = CASE
+                    WHEN :novoStatus = 'RETIRADO_PELO_CLIENTE'
+                    THEN LOCALTIMESTAMP
+                    ELSE DATA_RETIRADA
                 END
+
             WHERE ID_PEDIDO = :idPedido
             AND STATUS = :statusAnterior
         `;
@@ -159,6 +178,7 @@ async function avancarPedidoPorScanner(idPedido) {
         const transicoes = {
             AGUARDANDO_PREPARACAO: "EM_PREPARACAO",
             EM_PREPARACAO: "PRONTO_RETIRADA",
+            PRONTO_RETIRADA: "RETIRADO_PELO_CLIENTE",
         };
 
         const novoStatus = transicoes[statusAnterior];
@@ -174,16 +194,25 @@ async function avancarPedidoPorScanner(idPedido) {
 
         await conexao.execute(
             `UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
-            SET
-                STATUS = :novoStatus,
-                -- Registra o horário ao finalizar pelo scanner.
-                DATA_PRONTO = CASE
-                    WHEN :novoStatus = 'PRONTO_RETIRADA'
-                    THEN LOCALTIMESTAMP
-                    ELSE DATA_PRONTO
-                END
-            WHERE ID_PEDIDO = :idPedido
-            AND STATUS = :statusAnterior`,
+        SET
+            STATUS = :novoStatus,
+
+            -- Registra quando o pedido fica pronto.
+            DATA_PRONTO = CASE
+                WHEN :novoStatus = 'PRONTO_RETIRADA'
+                THEN LOCALTIMESTAMP
+                ELSE DATA_PRONTO
+            END,
+
+            -- Registra quando o cliente retira o pedido.
+            DATA_RETIRADA = CASE
+                WHEN :novoStatus = 'RETIRADO_PELO_CLIENTE'
+                THEN LOCALTIMESTAMP
+                ELSE DATA_RETIRADA
+            END
+
+        WHERE ID_PEDIDO = :idPedido
+        AND STATUS = :statusAnterior`,
             {
                 novoStatus,
                 idPedido,

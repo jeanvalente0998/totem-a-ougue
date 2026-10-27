@@ -12,15 +12,6 @@ function TecladoNumerico({
         <div className="teclado-numerico">
             <div className="teclado-numerico-topo">
                 <span>Digite seu CPF</span>
-
-                <button
-                    type="button"
-                    className="teclado-fechar"
-                    onClick={onFechar}
-                    aria-label="Fechar teclado"
-                >
-                    ×
-                </button>
             </div>
 
             <div className="teclado-numerico-grade">
