@@ -868,52 +868,52 @@
 /* ===== PAINEL DE LEITURA AUTOMÁTICA ===== */
 
 .leitor-pedido-identificado {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 
-    padding: 10px 20px;
-    margin-top: 10px;
+  padding: 10px 20px;
+  margin-top: 10px;
 
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 12px;
-    text-align: center;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: center;
 }
 
 .leitor-senha-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: #166534;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #166534;
 }
 
 .leitor-senha-numero {
-    font-size: 48px;
-    font-weight: 800;
-    line-height: 1;
-    color: #14532d;
-    font-variant-numeric: tabular-nums;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  color: #14532d;
+  font-variant-numeric: tabular-nums;
 }
 
 .leitor-pedido-numero {
-    font-size: 13px;
-    font-weight: 500;
-    color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
 }
 
 .leitor-pedido-status {
-    margin-top: 3px;
-    padding: 4px 12px;
+  margin-top: 3px;
+  padding: 4px 12px;
 
-    background: #dcfce7;
-    color: #166534;
-    border-radius: 20px;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 20px;
 
-    font-size: 11px;
-    font-weight: 700;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 
@@ -921,80 +921,415 @@
 
 /* Pedido em preparação: azul */
 .leitor-pedido-identificado.painel-em-preparacao {
-    background: #eff6ff;
-    border-color: #bfdbfe;
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .painel-em-preparacao .leitor-senha-label {
-    color: #1d4ed8;
+  color: #1d4ed8;
 }
 
 .painel-em-preparacao .leitor-senha-numero {
-    color: #1e40af;
+  color: #1e40af;
 }
 
 .painel-em-preparacao .leitor-pedido-status {
-    background: #dbeafe;
-    color: #1d4ed8;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 /* Pedido pronto para retirada: verde */
 .leitor-pedido-identificado.painel-pronto-retirada {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .painel-pronto-retirada .leitor-senha-label {
-    color: #166534;
+  color: #166534;
 }
 
 .painel-pronto-retirada .leitor-senha-numero {
-    color: #14532d;
+  color: #14532d;
 }
 
 .painel-pronto-retirada .leitor-pedido-status {
-    background: #dcfce7;
-    color: #166534;
+  background: #dcfce7;
+  color: #166534;
 }
 
 /* ===== NOTIFICAÇÃO COMPACTA DE NOVOS PEDIDOS ===== */
 
 .alerta-novo-pedido {
-    padding: 12px 16px;
+  padding: 12px 16px;
 }
 
 .alerta-pedido-conteudo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .alerta-pedido-titulo {
-    margin: 0;
+  margin: 0;
 }
 
 .alerta-pedido-senhas {
-    margin: 0;
-    gap: 8px;
+  margin: 0;
+  gap: 8px;
 }
 
 
 /* ===== PEDIDO RETIRADO PELO CLIENTE - ROXO ===== */
 
 .leitor-pedido-identificado.painel-retirado-cliente {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
 }
 
 .painel-retirado-cliente .leitor-senha-label {
-    color: #6d28d9;
+  color: #6d28d9;
 }
 
 .painel-retirado-cliente .leitor-senha-numero {
-    color: #5b21b6;
+  color: #5b21b6;
 }
 
 .painel-retirado-cliente .leitor-pedido-status {
-    background: #ede9fe;
-    color: #5b21b6;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+
+/* =========================================
+   COMPREMIX - GERENCIAMENTO COMPACTO
+   ========================================= */
+
+/* Reduz o espaço externo da página */
+.pagina-gerenciamento {
+  padding: 12px;
+}
+
+/* Aproxima o quadro do cabeçalho */
+.conteudo-gerenciamento {
+  margin-top: 8px;
+  padding: 12px 16px;
+}
+
+/* Reduz o espaço abaixo do título */
+.conteudo-gerenciamento>h2 {
+  margin: 0 0 12px;
+  font-size: 23px;
+  text-align: center;
+}
+
+/* Mantém as três colunas lado a lado */
+.conteudo-gerenciamento .quadro-kanban {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Reduz os espaços internos das colunas */
+.conteudo-gerenciamento .coluna-kanban {
+  padding: 10px;
+}
+
+/* Aproxima os cartões dentro das colunas */
+.conteudo-gerenciamento .coluna-kanban-pedidos {
+  gap: 10px;
+}
+
+/* Adaptação para telas estreitas */
+@media (max-width: 700px) {
+  .conteudo-gerenciamento .quadro-kanban {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================
+   COMPREMIX - CARTÕES KANBAN COMPACTOS
+   ========================================= */
+
+/* Cartão com menos espaço interno */
+.conteudo-gerenciamento .coluna-kanban .card-pedido {
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* Cabeçalho mais baixo */
+.card-pedido-cabecalho {
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: none;
+}
+
+/* Texto SENHA */
+.card-pedido-label-senha {
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
+/* Número da senha */
+.card-pedido-cabecalho h3 {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* Identificador do pedido */
+.card-pedido-cabecalho p {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+/* Etiqueta de status mais compacta */
+.card-pedido-status {
+  width: 108px;
+  min-height: 38px;
+  padding: 5px 7px;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+/* Aproxima o botão do cabeçalho */
+.card-pedido-acoes {
+  margin-top: 10px;
+}
+
+/* Botões de ação mais baixos */
+.botao-iniciar-preparacao,
+.botao-finalizar-preparacao {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+/* Pedido pronto também ocupa menos espaço */
+.pedido-finalizado {
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+/* Mantém espaço para a etiqueta NOVO */
+.card-pedido.card-pedido-novo .card-pedido-cabecalho {
+  padding-top: 24px;
+}
+
+
+/* =========================================
+   COMPREMIX - CABEÇALHO KANBAN COMPACTO
+   ========================================= */
+
+/* Título e contador na mesma linha */
+.conteudo-gerenciamento .coluna-kanban-cabecalho {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 0;
+  height: auto;
+  padding: 4px 2px;
+  margin: 0 0 8px;
+}
+
+/* Reduz o título das colunas */
+.conteudo-gerenciamento .coluna-kanban-cabecalho h2 {
+  margin: 0;
+  padding: 0;
+
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Contador pequeno ao lado do título */
+.conteudo-gerenciamento .coluna-kanban-contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 24px;
+  min-height: 24px;
+  width: auto;
+  height: auto;
+
+  padding: 2px 6px;
+  margin: 0;
+
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.07);
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Reduz o espaço entre os cartões e as bordas */
+.conteudo-gerenciamento .coluna-kanban {
+  padding: 8px;
+}
+
+/* Reduz o espaçamento entre os pedidos */
+.conteudo-gerenciamento .coluna-kanban-pedidos {
+  gap: 8px;
+}
+
+
+/* =========================================
+   COMPREMIX - CARTÃO ULTRACOMPACTO
+   ========================================= */
+
+/* Reduz as margens internas do cartão */
+.conteudo-gerenciamento .coluna-kanban .card-pedido {
+  padding: 8px;
+  border-radius: 9px;
+}
+
+/* Compacta a área da senha e do status */
+.conteudo-gerenciamento .card-pedido-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+
+  min-height: 0;
+  border-bottom: none;
+}
+
+/* Remove o espaço extra reservado à etiqueta NOVO */
+.conteudo-gerenciamento .card-pedido.card-pedido-novo .card-pedido-cabecalho {
+  padding-top: 16px;
+}
+
+/* Texto SENHA */
+.conteudo-gerenciamento .card-pedido-label-senha {
+  margin: 0 0 2px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+/* Número da senha */
+.conteudo-gerenciamento .card-pedido-cabecalho h3 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1;
+}
+
+/* Número do pedido */
+.conteudo-gerenciamento .card-pedido-cabecalho p {
+  margin: 3px 0 0;
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+/* Status mais baixo e estreito */
+.conteudo-gerenciamento .card-pedido-status {
+  width: 100px;
+  min-height: 32px;
+  padding: 4px 6px;
+
+  border-radius: 10px;
+  font-size: 10px;
+  line-height: 1.1;
+  box-sizing: border-box;
+}
+
+/* Aproxima o botão do cabeçalho */
+.conteudo-gerenciamento .card-pedido-acoes {
+  margin-top: 6px;
+}
+
+/* Reduz as margens do botão */
+.conteudo-gerenciamento .botao-iniciar-preparacao,
+.conteudo-gerenciamento .botao-finalizar-preparacao {
+  min-height: 36px;
+  padding: 7px 10px;
+
+  font-size: 12px;
+  border-radius: 7px;
+}
+
+/* Compacta a indicação de pedido pronto */
+.conteudo-gerenciamento .pedido-finalizado {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+
+
+/* =========================================
+   COMPREMIX - CABEÇALHO COMPACTO
+   ========================================= */
+
+/* Reduz o espaço interno do cabeçalho */
+.pagina-gerenciamento .cabecalho-gerenciamento {
+  padding: 10px 20px;
+  gap: 12px;
+
+  min-height: 0;
+  border-radius: 10px;
+  border-top-width: 4px;
+}
+
+/* Título principal */
+.pagina-gerenciamento .cabecalho-gerenciamento h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+/* Subtítulo abaixo do título */
+.pagina-gerenciamento .cabecalho-gerenciamento p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* Identificação do painel do funcionário */
+.pagina-gerenciamento .status-painel {
+  padding: 6px 12px;
+  border-radius: 16px;
+
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* Aproxima o quadro de pedidos do cabeçalho */
+.pagina-gerenciamento .conteudo-gerenciamento {
+  margin-top: 6px;
+  padding-top: 10px;
+}
+
+/* Reduz o espaço abaixo do título Pedidos recebidos */
+.pagina-gerenciamento .conteudo-gerenciamento>h2 {
+  margin-bottom: 8px;
+  font-size: 21px;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 700px) {
+  .pagina-gerenciamento .cabecalho-gerenciamento {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .pagina-gerenciamento .cabecalho-gerenciamento h1 {
+    font-size: 20px;
+  }
+
+  .pagina-gerenciamento .status-painel {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }

@@ -91,10 +91,7 @@ function PainelCliente() {
 
             <header className="painel-cliente-cabecalho">
                 <div className="painel-cliente-cabecalho-texto">
-                    <h1>
-                        Acompanhe
-                        <span>seu Pedido</span>
-                    </h1>
+                    <h1>Acompanhe seu Pedido</h1>
                 </div>
 
                 <div className="painel-cliente-marca">
@@ -123,10 +120,12 @@ function PainelCliente() {
                             key={coluna.id}
                             className={`painel-cliente-coluna coluna-${coluna.id}`}
                         >
-                            <h2>{coluna.titulo}</h2>
+                            <div className="painel-cliente-coluna-cabecalho">
+                                <h2>{coluna.titulo}</h2>
 
-                            <div className="painel-cliente-contador">
-                                {pedidosColuna.length}
+                                <span className="painel-cliente-contador">
+                                    {pedidosColuna.length}
+                                </span>
                             </div>
 
                             <div className="painel-cliente-lista">
