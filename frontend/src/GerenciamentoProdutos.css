@@ -1,0 +1,407 @@
+/* =========================================================
+   COMPREMIX | GERENCIAMENTO DE PRODUTOS
+   Identidade visual: vermelho #CE171F, amarelo #FFC20E
+   ========================================================= */
+
+.gerprod-pagina {
+    --gerprod-vermelho: #CE171F;
+    --gerprod-vermelho-escuro: #AD1018;
+    --gerprod-amarelo: #FFC20E;
+    --gerprod-texto: #292929;
+    --gerprod-suave: #F7F7F7;
+    --gerprod-borda: #E5E5E5;
+
+    min-height: 100vh;
+    padding: 0 0 36px;
+    background: var(--gerprod-suave);
+    color: var(--gerprod-texto);
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+.gerprod-pagina *,
+.gerprod-pagina *::before,
+.gerprod-pagina *::after {
+    box-sizing: border-box;
+}
+
+.gerprod-container {
+    width: min(100%, 1500px);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Cabeçalho inspirado no cabeçalho da tela de produtos */
+.gerprod-cabecalho {
+    position: relative;
+    margin: 0 calc(50% - 50vw) 26px;
+    padding: 28px max(24px, calc((100vw - 1452px) / 2)) 30px;
+    background: var(--gerprod-vermelho);
+    border-bottom: 5px solid var(--gerprod-amarelo);
+    color: #FFFFFF;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.09);
+}
+
+.gerprod-etiqueta {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: var(--gerprod-amarelo);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.gerprod-cabecalho h1 {
+    margin: 0 0 8px;
+    color: #FFFFFF;
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.gerprod-cabecalho p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.91);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* Filtros */
+.gerprod-filtros {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 22px;
+    background: #FFFFFF;
+    border: 1px solid var(--gerprod-borda);
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.045);
+}
+
+.gerprod-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.gerprod-campo label {
+    color: #414141;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.gerprod-campo select,
+.gerprod-campo input {
+    width: 100%;
+    height: 48px;
+    padding: 0 13px;
+    border: 1px solid #D8D8D8;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: var(--gerprod-texto);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gerprod-campo select {
+    cursor: pointer;
+}
+
+.gerprod-campo input::placeholder {
+    color: #888888;
+}
+
+.gerprod-campo select:hover,
+.gerprod-campo input:hover {
+    border-color: #B9B9B9;
+}
+
+.gerprod-campo select:focus,
+.gerprod-campo input:focus {
+    border-color: var(--gerprod-vermelho);
+    box-shadow: 0 0 0 3px rgba(206, 23, 31, 0.12);
+}
+
+/* Listagem */
+.gerprod-listagem {
+    overflow: hidden;
+    background: #FFFFFF;
+    border: 1px solid var(--gerprod-borda);
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.gerprod-resumo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--gerprod-borda);
+}
+
+.gerprod-resumo>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    min-width: 180px;
+    padding: 15px 20px;
+    background: #F9F9F9;
+    border: 1px solid #EAEAEA;
+    border-left: 4px solid var(--gerprod-vermelho);
+    border-radius: 10px;
+}
+
+.gerprod-resumo>div:nth-child(2) {
+    background: #FFFBEB;
+    border-color: #FBE7A4;
+    border-left-color: var(--gerprod-amarelo);
+}
+
+.gerprod-resumo strong {
+    color: var(--gerprod-vermelho);
+    font-size: 29px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.gerprod-resumo>div:nth-child(2) strong {
+    color: #8B5E00;
+}
+
+.gerprod-resumo span {
+    color: #666666;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Tabela de produtos */
+.gerprod-tabela-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.gerprod-tabela {
+    width: 100%;
+    min-width: 930px;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+}
+
+.gerprod-tabela th {
+    padding: 17px 16px;
+    background: #F5F5F5;
+    border-bottom: 2px solid #E6E6E6;
+    color: #555555;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.gerprod-tabela td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #EEEEEE;
+    color: #505050;
+    line-height: 1.45;
+    vertical-align: middle;
+}
+
+.gerprod-tabela tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.gerprod-tabela tbody tr:nth-child(even) {
+    background: #FCFCFC;
+}
+
+.gerprod-tabela tbody tr:hover {
+    background: #FFF8E7;
+}
+
+.gerprod-tabela tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.gerprod-nome-produto {
+    color: #292929 !important;
+    font-weight: 800;
+}
+
+/* Etiquetas de disponibilidade */
+.gerprod-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 31px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.gerprod-status-totem {
+    color: #166534;
+    background: #DCFCE7;
+}
+
+.gerprod-status-balcao {
+    color: #9A3412;
+    background: #FFEDD5;
+}
+
+/* Controle visual tipo interruptor: o input original permanece funcional */
+.gerprod-controle-balcao {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.gerprod-controle-balcao input[type="checkbox"] {
+    position: relative;
+    flex: 0 0 auto;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 42px;
+    height: 24px;
+    margin: 0;
+    border: 1px solid #C9C9C9;
+    border-radius: 999px;
+    background: #DADADA;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.gerprod-controle-balcao input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    transition: transform 0.2s ease;
+}
+
+.gerprod-controle-balcao input[type="checkbox"]:checked {
+    background: var(--gerprod-vermelho);
+    border-color: var(--gerprod-vermelho);
+}
+
+.gerprod-controle-balcao input[type="checkbox"]:checked::before {
+    transform: translateX(18px);
+}
+
+.gerprod-controle-balcao input[type="checkbox"]:focus-visible {
+    outline: 3px solid rgba(206, 23, 31, 0.25);
+    outline-offset: 3px;
+}
+
+.gerprod-controle-balcao input[type="checkbox"]:disabled {
+    cursor: wait;
+}
+
+.gerprod-controle-balcao:has(input:disabled) {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+/* Mensagens */
+.gerprod-mensagem {
+    margin: 0;
+    padding: 28px;
+    color: #666666;
+    text-align: center;
+    font-size: 14px;
+}
+
+.gerprod-erro {
+    color: #A10E15;
+    background: #FFF1F2;
+    border-bottom: 1px solid #F2B6BA;
+    font-weight: 600;
+}
+
+/* Telas menores */
+@media (max-width: 1100px) {
+    .gerprod-filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .gerprod-container {
+        padding: 0 14px;
+    }
+
+    .gerprod-cabecalho {
+        margin-bottom: 18px;
+        padding: 25px 18px;
+    }
+
+    .gerprod-cabecalho h1 {
+        font-size: 25px;
+    }
+
+    .gerprod-cabecalho p {
+        font-size: 13px;
+    }
+
+    .gerprod-filtros {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .gerprod-resumo {
+        padding: 14px;
+    }
+
+    .gerprod-resumo>div {
+        flex: 1 1 150px;
+        min-width: 0;
+    }
+
+    .gerprod-resumo strong {
+        font-size: 25px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .gerprod-pagina *,
+    .gerprod-pagina *::before,
+    .gerprod-pagina *::after {
+        transition: none !important;
+    }
+}
+
+/* Ajuste da altura do cabeçalho */
+
+.gerprod-cabecalho {
+    padding-top: 22px;
+    padding-bottom: 22px;
+}
+
+.gerprod-cabecalho h1 {
+    font-size: 28px;
+    margin: 6px 0;
+}
+
+.gerprod-cabecalho p {
+    font-size: 14px;
+}

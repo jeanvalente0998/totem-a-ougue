@@ -6,6 +6,8 @@ import Produtos from "./Produtos";
 import Gerenciamento from "./Gerenciamento";
 import PainelCliente from "./PainelCliente";
 import TecladoNumerico from "./TecladoNumerico";
+import ModalCancelarPedido from "./ModalCancelarPedido";
+import GerenciamentoProdutos from "./GerenciamentoProdutos";
 import "./App.css";
 
 
@@ -31,6 +33,12 @@ function App() {
           path="/painel-cliente"
           element={<PainelCliente />}
         />
+
+        {/* Tela 4 - Gerenciamento de produtos Açougue */}
+        <Route
+          path="/gerenciamento-produtos"
+          element={<GerenciamentoProdutos />}
+        />
       </Routes>
     </BrowserRouter>
   );
@@ -45,6 +53,7 @@ function TelaInicial() {
   // CONFIGURAÇÃO DO TECLADO VIRTUAL
   const TECLADO_VIRTUAL_ATIVO = true;
   const [tecladoAberto, setTecladoAberto] = useState(true);
+  const [modalCancelamentoAberta, setModalCancelamentoAberta] = useState(false);
 
   if (cliente) {
     return (
@@ -205,6 +214,17 @@ function TelaInicial() {
 
           </form>
 
+          <button
+            type="button"
+            className="botao-cancelar-pedido"
+            onClick={() => {
+              setModalCancelamentoAberta(true);
+              setTecladoAberto(false);
+            }}
+          >
+            Cancelar pedido
+          </button>
+
           {mensagem && (
             <div
               className={`mensagem ${cliente ? "mensagem-sucesso" : "mensagem-erro"
@@ -227,6 +247,14 @@ function TelaInicial() {
 
         <footer className="rodape"></footer>
       </section>
+      {modalCancelamentoAberta && (
+        <ModalCancelarPedido
+          onFechar={() => {
+            setModalCancelamentoAberta(false);
+            setTecladoAberto(true);
+          }}
+        />
+      )}
     </main>
   );
 }

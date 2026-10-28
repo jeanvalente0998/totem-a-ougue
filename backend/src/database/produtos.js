@@ -15,6 +15,10 @@ async function consultarProdutos() {
         A.CODPROD,
         A.DESCRICAO,
         A.DIRFOTOPROD,
+
+        -- Define se o produto pode ser adicionado ao pedido.
+        NVL(TRIM(A.ENVIA_TOTEM), 'S') AS ENVIA_TOTEM,
+
         E.CODAUXILIAR,
         E.UNIDADE,
         (

@@ -40,13 +40,19 @@ function Gerenciamento() {
 
     const [ultimoPedidoLido, setUltimoPedidoLido] = useState(null);
 
+    const [cancelamentosPendentes, setCancelamentosPendentes] = useState([]);
+    const [confirmandoCiencia, setConfirmandoCiencia] = useState(false);
+    const [erroCancelamento, setErroCancelamento] = useState("");
+
+    const cancelamentoAtual = cancelamentosPendentes[0] ?? null;
+
     // Atualiza o tempo usado para identificar pedidos novos.
     const [agora, setAgora] = useState(() => Date.now());
 
     useEffect(() => {
         const intervalo = setInterval(() => {
             setAgora(Date.now());
-        }, 5000);
+        }, 2000);
 
         return () => clearInterval(intervalo);
     }, []);
@@ -242,6 +248,49 @@ function Gerenciamento() {
         }
     }
 
+    useEffect(() => {
+        let ativo = true;
+        let consultando = false;
+
+        async function carregarCancelamentos() {
+            if (!ativo || consultando) return;
+
+            consultando = true;
+
+            try {
+                const resposta = await fetch(
+                    "/api/pedidos/cancelamentos-pendentes",
+                    { cache: "no-store" }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error("Erro ao consultar cancelamentos.");
+                }
+
+                const dados = await resposta.json();
+
+                if (ativo) {
+                    setCancelamentosPendentes(dados.cancelamentos ?? []);
+                }
+
+            } catch (erro) {
+                console.error("Erro ao consultar cancelamentos:", erro);
+
+            } finally {
+                consultando = false;
+            }
+        }
+
+        carregarCancelamentos();
+
+        // Mantém a mesma frequência de atualização do Kanban.
+        const intervalo = setInterval(carregarCancelamentos, 2000);
+
+        return () => {
+            ativo = false;
+            clearInterval(intervalo);
+        };
+    }, []);
 
     useEffect(() => {
         let ativo = true;
@@ -392,10 +441,10 @@ function Gerenciamento() {
         // Primeira consulta ao abrir o gerenciamento.
         carregarPedidos(true);
 
-        // Consulta novamente a cada 5 segundos.
+        // Consulta novamente a cada 2 segundos.
         const intervalo = setInterval(() => {
             carregarPedidos(false);
-        }, 5000);
+        }, 2000);
 
         // Remove o intervalo quando o componente é desmontado.
         return () => {
@@ -550,9 +599,99 @@ function Gerenciamento() {
         };
     }, []);
 
+    async function confirmarCancelamentoVisualizado() {
+        if (!cancelamentoAtual || confirmandoCiencia) return;
+
+        setConfirmandoCiencia(true);
+        setErroCancelamento("");
+
+        try {
+            const resposta = await fetch(
+                `/api/pedidos/${cancelamentoAtual.ID_PEDIDO}/ciencia-cancelamento`,
+                { method: "PATCH" }
+            );
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.mensagem || "Não foi possível confirmar."
+                );
+            }
+
+            setCancelamentosPendentes((anteriores) =>
+                anteriores.filter(
+                    (pedido) =>
+                        pedido.ID_PEDIDO !== cancelamentoAtual.ID_PEDIDO
+                )
+            );
+
+        } catch (erro) {
+            setErroCancelamento(erro.message);
+
+        } finally {
+            setConfirmandoCiencia(false);
+        }
+    }
 
     return (
         <main className="pagina-gerenciamento">
+
+            {cancelamentoAtual && (
+                <div
+                    className="alerta-cancelamento-overlay"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="titulo-alerta-cancelamento"
+                >
+                    <div className="alerta-cancelamento-conteudo">
+                        <div className="alerta-cancelamento-icone">!</div>
+
+                        <h2 id="titulo-alerta-cancelamento">
+                            PEDIDO CANCELADO!
+                        </h2>
+
+                        <p className="alerta-cancelamento-descricao">
+                            Atenção! O cliente solicitou o cancelamento
+                            do pedido abaixo.
+                        </p>
+
+                        <div className="alerta-cancelamento-dados">
+                            <div>
+                                <span>SENHA</span>
+                                <strong>
+                                    {String(cancelamentoAtual.SENHA).padStart(3, "0")}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>PEDIDO</span>
+                                <strong>
+                                    #{cancelamentoAtual.ID_PEDIDO}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <p className="alerta-cancelamento-instrucao">
+                            Interrompa a preparação deste pedido, informe que está ciente.
+                        </p>
+
+                        {erroCancelamento && (
+                            <p role="alert">{erroCancelamento}</p>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={confirmarCancelamentoVisualizado}
+                            disabled={confirmandoCiencia}
+                        >
+                            {confirmandoCiencia
+                                ? "CONFIRMANDO..."
+                                : "CIENTE"}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <header className="cabecalho-gerenciamento">
                 <div>

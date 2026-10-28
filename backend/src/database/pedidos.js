@@ -243,8 +243,168 @@ async function avancarPedidoPorScanner(idPedido) {
     }
 }
 
+async function cancelarPedido(idPedido, codcli) {
+    let conexao;
+
+    try {
+        conexao = await obterConexao();
+
+        // Atualização condicional e atômica:
+        // somente o proprietário pode cancelar um pedido
+        // que ainda não foi retirado ou cancelado.
+        const resultado = await conexao.execute(
+            `UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
+             SET
+                 STATUS = 'CANCELADO_PELO_CLIENTE',
+                 DATA_CANCELAMENTO = LOCALTIMESTAMP
+             WHERE ID_PEDIDO = :idPedido
+               AND CODCLI = :codcli
+               AND STATUS IN (
+                   'AGUARDANDO_PREPARACAO',
+                   'EM_PREPARACAO',
+                   'PRONTO_RETIRADA'
+               )`,
+            { idPedido, codcli },
+            { autoCommit: false }
+        );
+
+        if (resultado.rowsAffected !== 1) {
+            await conexao.rollback();
+            return false;
+        }
+
+        await conexao.commit();
+        return true;
+
+    } catch (erro) {
+        if (conexao) {
+            await conexao.rollback();
+        }
+
+        throw erro;
+
+    } finally {
+        if (conexao) {
+            await conexao.close();
+        }
+    }
+}
+
+async function consultarPedidoParaCancelamento(idPedido, codcli) {
+    let conexao;
+
+    try {
+        conexao = await obterConexao();
+
+        const resultado = await conexao.execute(
+            `SELECT
+                ID_PEDIDO,
+                SENHA,
+                VALOR_TOTAL,
+                STATUS
+             FROM HOMOLOGA.CF_TOTEM_PEDIDO
+             WHERE ID_PEDIDO = :idPedido
+               AND CODCLI = :codcli
+               AND STATUS IN (
+                   'AGUARDANDO_PREPARACAO',
+                   'EM_PREPARACAO',
+                   'PRONTO_RETIRADA'
+               )`,
+            { idPedido, codcli },
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        const pedido = resultado.rows[0];
+
+        if (!pedido) {
+            return null;
+        }
+
+        return {
+            idPedido: pedido.ID_PEDIDO,
+            senha: pedido.SENHA,
+            valorTotal: pedido.VALOR_TOTAL,
+            status: pedido.STATUS,
+        };
+
+    } finally {
+        if (conexao) {
+            await conexao.close();
+        }
+    }
+}
+
+// Consulta os cancelamentos ainda não reconhecidos pela equipe.
+async function consultarCancelamentosPendentes() {
+    let conexao;
+
+    try {
+        conexao = await obterConexao();
+
+        const resultado = await conexao.execute(
+            `SELECT
+                ID_PEDIDO,
+                SENHA,
+                VALOR_TOTAL,
+                DATA_CANCELAMENTO
+             FROM HOMOLOGA.CF_TOTEM_PEDIDO
+             WHERE STATUS = 'CANCELADO_PELO_CLIENTE'
+               AND DATA_CIENCIA_CANCELAMENTO IS NULL
+             ORDER BY DATA_CANCELAMENTO ASC, ID_PEDIDO ASC`,
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+
+        return resultado.rows;
+
+    } finally {
+        if (conexao) {
+            await conexao.close();
+        }
+    }
+}
+
+// Registra que o funcionário tomou ciência do cancelamento.
+async function confirmarCienciaCancelamento(idPedido) {
+    let conexao;
+
+    try {
+        conexao = await obterConexao();
+
+        const resultado = await conexao.execute(
+            `UPDATE HOMOLOGA.CF_TOTEM_PEDIDO
+             SET DATA_CIENCIA_CANCELAMENTO = LOCALTIMESTAMP
+             WHERE ID_PEDIDO = :idPedido
+               AND STATUS = 'CANCELADO_PELO_CLIENTE'
+               AND DATA_CIENCIA_CANCELAMENTO IS NULL`,
+            { idPedido },
+            { autoCommit: false }
+        );
+
+        if (resultado.rowsAffected !== 1) {
+            await conexao.rollback();
+            return false;
+        }
+
+        await conexao.commit();
+        return true;
+
+    } catch (erro) {
+        if (conexao) await conexao.rollback();
+        throw erro;
+
+    } finally {
+        if (conexao) await conexao.close();
+    }
+}
+
+
 module.exports = {
     consultarPedidos,
     atualizarStatusPedido,
     avancarPedidoPorScanner,
+    cancelarPedido,
+    consultarPedidoParaCancelamento,
+    consultarCancelamentosPendentes,
+    confirmarCienciaCancelamento,
 };

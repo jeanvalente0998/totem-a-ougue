@@ -1333,3 +1333,261 @@
     font-size: 11px;
   }
 }
+
+
+/* =========================================
+   ALERTA DE CANCELAMENTO - COMPREMIX
+   ========================================= */
+
+.alerta-cancelamento-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+    box-sizing: border-box;
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            #e53935 0%,
+            #c91620 48%,
+            #8e1018 100%
+        );
+
+    color: #ffffff;
+}
+
+/* Painel central */
+.alerta-cancelamento-conteudo {
+    width: 100%;
+    max-width: 760px;
+
+    padding: 38px 48px;
+    box-sizing: border-box;
+
+    text-align: center;
+
+    background: rgba(80, 0, 0, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 24px;
+
+    box-shadow:
+        0 24px 70px rgba(55, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Ícone de atenção */
+.alerta-cancelamento-icone {
+    width: 72px;
+    height: 72px;
+
+    margin: 0 auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    color: #ffffff;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.07);
+}
+
+/* Título */
+.alerta-cancelamento-conteudo h2 {
+    margin: 0 0 12px;
+
+    color: #ffffff;
+    font-size: clamp(30px, 4vw, 46px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Texto explicativo */
+.alerta-cancelamento-descricao {
+    max-width: 590px;
+    margin: 0 auto;
+
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Área com senha e pedido */
+.alerta-cancelamento-dados {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+
+    max-width: 510px;
+    margin: 28px auto;
+}
+
+/* Cartões */
+.alerta-cancelamento-dados > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    padding: 20px 12px;
+
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+}
+
+/* Rótulos */
+.alerta-cancelamento-dados span {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+/* Número da senha e do pedido */
+.alerta-cancelamento-dados strong {
+    margin-top: 8px;
+
+    color: #ffffff;
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Orientação ao funcionário */
+.alerta-cancelamento-instrucao {
+    max-width: 580px;
+    margin: 0 auto 26px;
+
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Botão de confirmação */
+.alerta-cancelamento-conteudo button {
+    width: 100%;
+    max-width: 310px;
+    min-height: 58px;
+
+    padding: 12px 28px;
+
+    background: #ffffff;
+    color: #b91c1c;
+
+    border: none;
+    border-radius: 12px;
+
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+
+    box-shadow: 0 8px 24px rgba(70, 0, 0, 0.22);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.alerta-cancelamento-conteudo button:hover:not(:disabled) {
+    background: #fff1f2;
+    transform: translateY(-2px);
+
+    box-shadow: 0 12px 28px rgba(70, 0, 0, 0.3);
+}
+
+.alerta-cancelamento-conteudo button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.alerta-cancelamento-conteudo button:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 4px;
+}
+
+.alerta-cancelamento-conteudo button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Ajustes para telas menores */
+@media (max-width: 600px) {
+    .alerta-cancelamento-overlay {
+        padding: 14px;
+    }
+
+    .alerta-cancelamento-conteudo {
+        padding: 28px 18px;
+        border-radius: 18px;
+    }
+
+    .alerta-cancelamento-icone {
+        width: 60px;
+        height: 60px;
+        font-size: 40px;
+    }
+
+    .alerta-cancelamento-descricao {
+        font-size: 14px;
+    }
+
+    .alerta-cancelamento-dados {
+        gap: 10px;
+        margin: 22px auto;
+    }
+
+    .alerta-cancelamento-dados > div {
+        padding: 16px 8px;
+    }
+
+    .alerta-cancelamento-instrucao {
+        font-size: 14px;
+    }
+}
+
+/* Ajuste para monitores com pouca altura */
+@media (max-height: 700px) {
+    .alerta-cancelamento-overlay {
+        overflow-y: auto;
+    }
+
+    .alerta-cancelamento-conteudo {
+        padding-top: 22px;
+        padding-bottom: 22px;
+    }
+
+    .alerta-cancelamento-icone {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 14px;
+        font-size: 38px;
+    }
+
+    .alerta-cancelamento-dados {
+        margin-top: 18px;
+        margin-bottom: 18px;
+    }
+}

@@ -13,6 +13,11 @@ const {
     consultarClientePorCpf,
 } = require("./database/oracle");
 
+const {
+    consultarProdutosGerenciamento,
+    atualizarEnviaTotem,
+} = require("./database/gerenciamentoProdutos");
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -83,6 +88,66 @@ app.post("/api/clientes/validar-cpf", async (req, res) => {
         return res.status(500).json({
             autorizado: false,
             mensagem: "Não foi possível validar o cadastro. Tente novamente.",
+        });
+    }
+});
+
+// Lista os produtos para configuração pelo gerente do açougue.
+app.get("/api/gerenciamento-produtos", async (req, res) => {
+    try {
+        const produtos = await consultarProdutosGerenciamento();
+
+        return res.json({ produtos });
+
+    } catch (erro) {
+        console.error(
+            "Erro ao consultar produtos do gerenciamento:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível consultar os produtos.",
+        });
+    }
+});
+
+// Atualiza se um produto pode ser adicionado ao pedido no totem.
+app.patch("/api/gerenciamento-produtos/:codprod/envia-totem", async (req, res) => {
+    try {
+        const codprod = Number(req.params.codprod);
+        const { enviaTotem } = req.body;
+
+        if (
+            !Number.isSafeInteger(codprod) ||
+            codprod <= 0 ||
+            !["S", "N"].includes(enviaTotem)
+        ) {
+            return res.status(400).json({
+                mensagem: "Código do produto ou configuração inválida.",
+            });
+        }
+
+        const atualizado = await atualizarEnviaTotem(
+            codprod,
+            enviaTotem
+        );
+
+        if (!atualizado) {
+            return res.status(404).json({
+                mensagem: "Produto não encontrado ou não permitido.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Configuração atualizada com sucesso.",
+            codprod,
+            enviaTotem,
+        });
+    } catch (erro) {
+        console.error("Erro ao atualizar ENVIA_TOTEM:", erro);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível atualizar o produto.",
         });
     }
 });

@@ -11,6 +11,10 @@ const {
 const {
     atualizarStatusPedido,
     avancarPedidoPorScanner,
+    cancelarPedido,
+    consultarPedidoParaCancelamento,
+    consultarCancelamentosPendentes,
+    confirmarCienciaCancelamento,
 } = require("./database/pedidos");
 
 
@@ -108,7 +112,10 @@ router.post("/", async (req, res) => {
                 A.CODPROD,
                 A.DESCRICAO,
                 E.UNIDADE,
-                
+
+                -- Verifica se o produto pode ser solicitado pelo totem.
+                NVL(TRIM(A.ENVIA_TOTEM), 'S') AS ENVIA_TOTEM,
+
                 COALESCE(PROMO.VLOFERTA, E.PVENDA) AS PVENDA,
                 (
                     F.QTESTGER
@@ -229,6 +236,35 @@ router.post("/", async (req, res) => {
             produtos.map((produto) => [produto.CODPROD, produto])
         );
 
+        // Impede pedidos de produtos exclusivos de retirada no balcão.
+        const produtosExclusivosBalcao = produtos.filter(
+            (produto) =>
+                String(produto.ENVIA_TOTEM ?? "S")
+                    .trim()
+                    .toUpperCase() === "N"
+        );
+
+        if (produtosExclusivosBalcao.length > 0) {
+
+            // Cancela a transação sem gravar nenhum pedido.
+            await conexao.rollback();
+            transacaoIniciada = false;
+
+            const nomesProdutos = produtosExclusivosBalcao
+                .map((produto) => produto.DESCRICAO)
+                .join(", ");
+
+            return res.status(409).json({
+                mensagem:
+                    `O(s) produto(s) ${nomesProdutos} são exclusivos ` +
+                    "para retirada no balcão. Remova-os do carrinho " +
+                    "para continuar o pedido.",
+                codigo: "PRODUTO_EXCLUSIVO_BALCAO",
+                produtos: produtosExclusivosBalcao.map(
+                    (produto) => produto.CODPROD
+                ),
+            });
+        }
 
         // Valida os cortes de todos os itens antes de gravar o pedido.
         for (const item of itens) {
@@ -563,6 +599,190 @@ router.post("/scan", async (req, res) => {
         if (bloqueioAdquirido) {
             pedidosScannerEmProcessamento.delete(idPedido);
         }
+    }
+});
+
+router.post("/cancelar", async (req, res) => {
+    try {
+        const cpf = String(req.body?.cpf ?? "")
+            .replace(/\D/g, "");
+
+        const numeroPedido = String(
+            req.body?.numeroPedido ?? ""
+        ).trim();
+
+        if (!/^\d{11}$/.test(cpf)) {
+            return res.status(400).json({
+                mensagem: "Informe um CPF com 11 números.",
+            });
+        }
+
+        if (!/^[1-9]\d*$/.test(numeroPedido)) {
+            return res.status(400).json({
+                mensagem: "Número do pedido inválido.",
+            });
+        }
+
+        const idPedido = Number(numeroPedido);
+
+        if (!Number.isSafeInteger(idPedido)) {
+            return res.status(400).json({
+                mensagem: "Número do pedido inválido.",
+            });
+        }
+
+        // Consulta o cliente no WinThor.
+        const cliente = await consultarClientePorCpf(cpf);
+
+        if (!cliente) {
+            return res.status(404).json({
+                mensagem:
+                    "Pedido não encontrado ou indisponível para cancelamento.",
+            });
+        }
+
+        // O Oracle confere o CODCLI e o status
+        // na mesma operação de atualização.
+        const cancelado = await cancelarPedido(
+            idPedido,
+            cliente.CODCLI
+        );
+
+        if (!cancelado) {
+            return res.status(409).json({
+                mensagem:
+                    "Pedido não encontrado ou indisponível para cancelamento.",
+            });
+        }
+
+        return res.status(200).json({
+            mensagem: "Pedido cancelado com sucesso.",
+            pedidoId: idPedido,
+            status: "CANCELADO_PELO_CLIENTE",
+        });
+
+    } catch (erro) {
+        console.error(
+            "Erro ao cancelar pedido:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível cancelar o pedido.",
+        });
+    }
+});
+
+// Consulta os dados de um pedido antes do cancelamento.
+router.post("/consultar-cancelamento", async (req, res) => {
+    try {
+        const cpf = String(req.body?.cpf ?? "").replace(/\D/g, "");
+        const numeroPedido = String(req.body?.numeroPedido ?? "").trim();
+
+        // Valida o CPF informado.
+        if (!/^\d{11}$/.test(cpf)) {
+            return res.status(400).json({
+                mensagem: "Informe um CPF com 11 números.",
+            });
+        }
+
+        // Valida o identificador do pedido.
+        if (!/^[1-9]\d*$/.test(numeroPedido)) {
+            return res.status(400).json({
+                mensagem: "Número do pedido inválido.",
+            });
+        }
+
+        const idPedido = Number(numeroPedido);
+
+        if (!Number.isSafeInteger(idPedido)) {
+            return res.status(400).json({
+                mensagem: "Número do pedido inválido.",
+            });
+        }
+
+        // Identifica o cliente no cadastro do WinThor.
+        const cliente = await consultarClientePorCpf(cpf);
+
+        if (!cliente) {
+            return res.status(404).json({
+                mensagem: "Pedido não encontrado ou indisponível para cancelamento.",
+            });
+        }
+
+        // Consulta somente pedidos pertencentes ao cliente
+        // e que ainda permitem cancelamento.
+        const pedido = await consultarPedidoParaCancelamento(
+            idPedido,
+            cliente.CODCLI
+        );
+
+        if (!pedido) {
+            return res.status(404).json({
+                mensagem: "Pedido não encontrado ou indisponível para cancelamento.",
+            });
+        }
+
+        return res.status(200).json({
+            mensagem: "Pedido localizado com sucesso.",
+            pedido,
+        });
+
+    } catch (erro) {
+        console.error("Erro ao consultar pedido para cancelamento:", erro.message);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível consultar o pedido. Tente novamente.",
+        });
+    }
+});
+
+// Lista cancelamentos que precisam ser reconhecidos pela equipe.
+router.get("/cancelamentos-pendentes", async (req, res) => {
+    try {
+        const cancelamentos = await consultarCancelamentosPendentes();
+
+        return res.json({ cancelamentos });
+
+    } catch (erro) {
+        console.error("Erro ao consultar cancelamentos:", erro.message);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível consultar os cancelamentos.",
+        });
+    }
+});
+
+// Confirma que a equipe tomou ciência do cancelamento.
+router.patch("/:id/ciencia-cancelamento", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+
+        if (!Number.isSafeInteger(idPedido) || idPedido <= 0) {
+            return res.status(400).json({
+                mensagem: "Identificador do pedido inválido.",
+            });
+        }
+
+        const confirmado = await confirmarCienciaCancelamento(idPedido);
+
+        if (!confirmado) {
+            return res.status(409).json({
+                mensagem: "Cancelamento já reconhecido ou indisponível.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Ciência do cancelamento registrada.",
+            pedidoId: idPedido,
+        });
+
+    } catch (erro) {
+        console.error("Erro ao confirmar ciência:", erro.message);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível confirmar a ciência.",
+        });
     }
 });
 

@@ -60,7 +60,7 @@ function PainelCliente() {
 
         carregarPedidos();
 
-        const intervalo = setInterval(carregarPedidos, 5000);
+        const intervalo = setInterval(carregarPedidos, 2000);
 
         return () => {
             ativo = false;

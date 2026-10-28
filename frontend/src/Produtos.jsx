@@ -109,6 +109,7 @@ function Produtos({ cliente, onConcluirAtendimento }) {
     const [modalConfirmacaoAberto, setModalConfirmacaoAberto] =
         useState(false);
     const [enviandoPedido, setEnviandoPedido] = useState(false);
+    const [erroConfirmacao, setErroConfirmacao] = useState("");
     const [modalSucesso, setModalSucesso] = useState({
         aberta: false,
         senha: "",
@@ -164,6 +165,12 @@ function Produtos({ cliente, onConcluirAtendimento }) {
                         categoria: identificarCategoria(nome),
                         preco: Number(produto.PVENDA),
                         unidade,
+
+                        // Indica se o produto é exclusivo de retirada no balcão.
+                        exclusivoBalcao:
+                            String(produto.ENVIA_TOTEM || "S")
+                                .trim()
+                                .toUpperCase() === "N",
                         // Cortes disponíveis conforme cadastro no Oracle.
                         cortesDisponiveis: identificarCortes(produto),
                         // Busca a foto real do produto cadastrada no WinThor.
@@ -220,6 +227,12 @@ function Produtos({ cliente, onConcluirAtendimento }) {
     }, [produtos, categoriaAtiva]);
 
     function adicionarProduto(produto) {
+
+        // Impede adicionar produtos exclusivos de retirada no balcão.
+        if (produto.exclusivoBalcao) {
+            return;
+        }
+
         setUltimoProdutoClicado(produto.id);
         setCarrinho((atual) => {
             const existente = atual.find((item) => item.id === produto.id);
@@ -295,6 +308,7 @@ function Produtos({ cliente, onConcluirAtendimento }) {
 
         try {
             setEnviandoPedido(true);
+            setErroConfirmacao("");
 
             // Impede o envio caso algum produto esteja sem corte obrigatório.
             const itensSemCorte = carrinho.filter((item) => {
@@ -338,7 +352,45 @@ function Produtos({ cliente, onConcluirAtendimento }) {
             const dados = await resposta.json();
 
             if (!resposta.ok) {
-                alert(dados.mensagem || "Não foi possível enviar o pedido.");
+                setErroConfirmacao(
+                    dados.mensagem || "Não foi possível enviar o pedido."
+                );
+
+                if (
+                    dados.codigo === "PRODUTO_EXCLUSIVO_BALCAO" &&
+                    Array.isArray(dados.produtos)
+                ) {
+                    const codigosBloqueados = new Set(
+                        dados.produtos.map(Number)
+                    );
+
+                    // Remove do carrinho apenas os produtos bloqueados.
+                    setCarrinho((atual) =>
+                        atual.filter(
+                            (item) => !codigosBloqueados.has(Number(item.id))
+                        )
+                    );
+
+                    // Atualiza o catálogo para identificar os produtos
+                    // que agora são exclusivos do balcão.
+                    setProdutos((atual) =>
+                        atual.map((produto) =>
+                            codigosBloqueados.has(Number(produto.id))
+                                ? { ...produto, exclusivoBalcao: true }
+                                : produto
+                        )
+                    );
+
+                    // Limpa a referência do último produto adicionado,
+                    // caso ele tenha sido bloqueado.
+                    setUltimoProdutoClicado((atual) =>
+                        codigosBloqueados.has(Number(atual)) ? null : atual
+                    );
+
+                    setDropdownCorteAberto(null);
+                    setDropdownCorteModalAberto(null);
+                }
+
                 return;
             }
 
@@ -514,11 +566,24 @@ function Produtos({ cliente, onConcluirAtendimento }) {
                                             <small> / {produto.unidade}</small>
                                         </p>
 
+                                        {produto.exclusivoBalcao && (
+                                            <p className="aviso-retirada-balcao">
+                                                Produto exclusivo de retirada no balcão
+                                            </p>
+                                        )}
+
                                         <button
-                                            className="botao-adicionar-acougue"
+                                            type="button"
+                                            className={`botao-adicionar-acougue ${produto.exclusivoBalcao
+                                                ? "botao-retirada-balcao"
+                                                : ""
+                                                }`}
                                             onClick={() => adicionarProduto(produto)}
+                                            disabled={produto.exclusivoBalcao}
                                         >
-                                            + Adicionar
+                                            {produto.exclusivoBalcao
+                                                ? "Retirar balcão"
+                                                : "+ Adicionar"}
                                         </button>
                                     </div>
                                 </article>
@@ -798,6 +863,15 @@ function Produtos({ cliente, onConcluirAtendimento }) {
                             antes de continuar.
                         </p>
 
+                        {erroConfirmacao && (
+                            <div
+                                className="aviso-erro-confirmacao"
+                                role="alert"
+                            >
+                                <strong>Não foi possível confirmar o pedido</strong>
+                                <p>{erroConfirmacao}</p>
+                            </div>
+                        )}
 
                         <div className="modal-lista-produtos">
                             {carrinho.map((item) => (
@@ -922,12 +996,14 @@ function Produtos({ cliente, onConcluirAtendimento }) {
                         <div className="modal-acoes">
                             <button
                                 className="botao-voltar"
-                                onClick={() => setModalConfirmacaoAberto(false)}
+                                onClick={() => {
+                                    setErroConfirmacao("");
+                                    setModalConfirmacaoAberto(false);
+                                }}
                                 disabled={enviandoPedido}
                             >
                                 Voltar
                             </button>
-
 
                             {produtosSemCorte.length > 0 && (
                                 <p className="aviso-cortes-pendentes" role="alert">
