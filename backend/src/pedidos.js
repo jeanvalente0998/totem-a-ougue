@@ -378,6 +378,7 @@ router.post("/", async (req, res) => {
         }
 
         // 8. Gravar o cabeçalho do pedido.
+        // Cada novo pedido já entra na fila de impressão automática.
         await conexao.execute(
             `INSERT INTO HOMOLOGA.CF_TOTEM_PEDIDO (
                 ID_PEDIDO,
@@ -386,7 +387,9 @@ router.post("/", async (req, res) => {
                 DATA_PEDIDO,
                 STATUS,
                 VALOR_TOTAL,
-                DATA_SENHA
+                DATA_SENHA,
+                STATUS_IMPRESSAO,
+                TENTATIVAS_IMPRESSAO
             ) VALUES (
                 :idPedido,
                 :codcli,
@@ -394,7 +397,9 @@ router.post("/", async (req, res) => {
                 SYSTIMESTAMP,
                 :status,
                 :valorTotal,
-                TRUNC(SYSDATE)
+                TRUNC(SYSDATE),
+                'PENDENTE',
+                0
             )`,
             {
                 idPedido,

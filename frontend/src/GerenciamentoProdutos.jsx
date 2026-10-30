@@ -17,7 +17,7 @@ export default function GerenciamentoProdutos() {
         async function carregarProdutos() {
             try {
                 const resposta = await fetch(
-                    "http://localhost:3001/api/gerenciamento-produtos"
+                    "/api/gerenciamento-produtos"
                 );
 
                 if (!resposta.ok) {
@@ -135,7 +135,7 @@ export default function GerenciamentoProdutos() {
 
         try {
             const resposta = await fetch(
-                `http://localhost:3001/api/gerenciamento-produtos/${produto.CODPROD}/envia-totem`,
+                `/api/gerenciamento-produtos/${produto.CODPROD}/envia-totem`,
                 {
                     method: "PATCH",
                     headers: {

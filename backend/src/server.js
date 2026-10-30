@@ -18,6 +18,19 @@ const {
     atualizarEnviaTotem,
 } = require("./database/gerenciamentoProdutos");
 
+const {
+    consultarImpressoesPendentes,
+    reservarImpressao,
+    confirmarImpressao,
+    registrarErroImpressao,
+    liberarImpressaoComErro,
+    consultarReservasInterrompidas,
+} = require("./database/impressoes");
+
+const {
+    autenticarImpressao
+} = require("./middlewares/autenticacaoImpressao");
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -244,6 +257,214 @@ app.get("/api/produtos/imagem/:codprod", async (req, res) => {
         if (conexao) {
             await conexao.close();
         }
+    }
+});
+
+app.use("/api/impressoes", autenticarImpressao);
+
+// Consulta as comandas pendentes de impressão.
+app.get("/api/impressoes/pendentes", async (req, res) => {
+    try {
+        const impressoes = await consultarImpressoesPendentes();
+
+        return res.json({ impressoes });
+    } catch (erro) {
+        console.error(
+            "Erro ao consultar impressões pendentes:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível consultar as impressões.",
+        });
+    }
+});
+
+// Reserva uma comanda para impressão.
+app.post("/api/impressoes/:id/reservar", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+
+        if (
+            !Number.isSafeInteger(idPedido) ||
+            idPedido <= 0
+        ) {
+            return res.status(400).json({
+                mensagem: "Identificador do pedido inválido.",
+            });
+        }
+
+        const reserva = await reservarImpressao(idPedido);
+
+        if (!reserva) {
+            return res.status(409).json({
+                mensagem:
+                    "Comanda indisponível para reserva.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Comanda reservada com sucesso.",
+            reserva,
+        });
+    } catch (erro) {
+        console.error(
+            "Erro ao reservar impressão:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível reservar a impressão.",
+        });
+    }
+});
+
+// Confirma que o aplicativo enviou a comanda à impressora.
+app.post("/api/impressoes/:id/confirmar", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+        const { token } = req.body ?? {};
+
+        if (
+            !Number.isSafeInteger(idPedido) ||
+            idPedido <= 0 ||
+            typeof token !== "string" ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)
+        ) {
+            return res.status(400).json({
+                mensagem: "Pedido ou token inválido.",
+            });
+        }
+
+        const confirmado = await confirmarImpressao(idPedido, token);
+
+        if (!confirmado) {
+            return res.status(409).json({
+                mensagem: "Reserva não encontrada ou já finalizada.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Envio da comanda confirmado.",
+            pedidoId: idPedido,
+            statusImpressao: "ENVIADA",
+        });
+
+    } catch (erro) {
+        console.error("Erro ao confirmar impressão:", erro.message);
+
+        return res.status(500).json({
+            mensagem: "Não foi possível confirmar a impressão.",
+        });
+    }
+});
+
+// Registra uma falha no envio da comanda.
+app.post("/api/impressoes/:id/erro", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+        const { token, mensagem } = req.body ?? {};
+
+        if (
+            !Number.isSafeInteger(idPedido) ||
+            idPedido <= 0 ||
+            typeof token !== "string" ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token) ||
+            typeof mensagem !== "string" ||
+            !mensagem.trim() ||
+            mensagem.length > 1000
+        ) {
+            return res.status(400).json({
+                mensagem: "Dados da falha inválidos.",
+            });
+        }
+
+        const registrado = await registrarErroImpressao(
+            idPedido,
+            token,
+            mensagem.trim()
+        );
+
+        if (!registrado) {
+            return res.status(409).json({
+                mensagem: "Reserva não encontrada ou já finalizada.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Falha de impressão registrada.",
+            pedidoId: idPedido,
+            statusImpressao: "ERRO",
+        });
+
+    } catch (erro) {
+        console.error(
+            "Erro ao registrar falha de impressão:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível registrar a falha.",
+        });
+    }
+});
+
+// Libera uma comanda com erro para nova tentativa.
+app.post("/api/impressoes/:id/tentar-novamente", async (req, res) => {
+    try {
+        const idPedido = Number(req.params.id);
+
+        if (!Number.isSafeInteger(idPedido) || idPedido <= 0) {
+            return res.status(400).json({
+                mensagem: "Identificador do pedido inválido.",
+            });
+        }
+
+        const liberado = await liberarImpressaoComErro(idPedido);
+
+        if (!liberado) {
+            return res.status(409).json({
+                mensagem: "A comanda não está disponível para nova tentativa.",
+            });
+        }
+
+        return res.json({
+            mensagem: "Comanda liberada para nova tentativa.",
+            pedidoId: idPedido,
+            statusImpressao: "PENDENTE",
+        });
+
+    } catch (erro) {
+        console.error(
+            "Erro ao liberar nova tentativa:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível liberar a comanda.",
+        });
+    }
+});
+
+// Consulta reservas de impressão possivelmente interrompidas.
+app.get("/api/impressoes/interrompidas", async (req, res) => {
+    try {
+        const reservas = await consultarReservasInterrompidas();
+
+        return res.json({
+            quantidade: reservas.length,
+            reservas,
+        });
+
+    } catch (erro) {
+        console.error(
+            "Erro ao consultar reservas interrompidas:",
+            erro.message
+        );
+
+        return res.status(500).json({
+            mensagem: "Não foi possível consultar as reservas.",
+        });
     }
 });
 

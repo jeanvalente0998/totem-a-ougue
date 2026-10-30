@@ -1,8 +1,14 @@
 
+const caminhoOracle = "C:\\oracle\\instantclient_19";
+
+// Prioriza o Instant Client 19 neste processo Node.js.
+process.env.PATH =
+  caminhoOracle + ";" + (process.env.PATH || "");
+
 const oracledb = require("oracledb");
 
 oracledb.initOracleClient({
-  libDir: "C:\\oracle\\instantclient_19",
+  libDir: caminhoOracle,
 });
 
 // Abre uma conexão com o Oracle.
